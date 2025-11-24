@@ -1,5 +1,6 @@
 import 'package:fitness_app/core/services/local_databse_service.dart';
 import 'package:fitness_app/models/body_measurement.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BodyMeasurementState {
@@ -36,6 +37,7 @@ class BodyMeasurementNotifier extends StateNotifier<BodyMeasurementState> {
   Future<void> loadMeasurements() async {
     state = state.copyWith(isLoading: true);
     final measurements = await dbService.getAllBodyMeasurements();
+    measurements.sort((a, b) => (b.tarih).compareTo(a.tarih));
     state = state.copyWith(measurements: measurements, isLoading: false);
   }
 
@@ -46,6 +48,11 @@ class BodyMeasurementNotifier extends StateNotifier<BodyMeasurementState> {
 
   Future<void> deleteMeasurement(int id) async {
     await dbService.deleteBodyMeasurement(id);
+    await loadMeasurements();
+  }
+
+  Future<void> updateMesaurment(BodyMeasurement measurement) async {
+    await dbService.updateBodyMeasurement(measurement);
     await loadMeasurements();
   }
 

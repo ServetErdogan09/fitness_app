@@ -3,11 +3,11 @@ import 'package:fitness_app/core/services/local_databse_service.dart';
 import 'package:fitness_app/features/tracking/provider/body_measurement_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/date_symbol_data_http_request.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('tr_TR', "");
+  await initializeDateFormatting('tr_TR', null);
 
   final dbService = DatabaseService();
   await dbService.initialize();
