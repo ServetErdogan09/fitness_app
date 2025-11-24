@@ -1,41 +1,36 @@
-import 'package:fitness_app/features/tracking/provider/body_measumurent_provider.dart';
+import 'package:fitness_app/features/tracking/provider/body_measurement_notifier.dart';
 import 'package:fitness_app/models/body_measurement.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
-class BodyMeasurementScreen extends StatefulWidget {
+class BodyMeasurementScreen extends ConsumerStatefulWidget {
   const BodyMeasurementScreen({super.key});
 
   @override
-  State<BodyMeasurementScreen> createState() => _BodyMeasurementScreenState();
+  ConsumerState<BodyMeasurementScreen> createState() =>
+      _BodyMeasurementScreenState();
 }
 
-class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
-  int _currentIndex = 0;
-
+class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = Provider.of<BodyMeasurementProvider>(
-        context,
-        listen: false,
-      );
-      provider.loadMeasurements();
-      provider.loadGoal(1);
+      ref.read(bodyMeasurementProvider.notifier).loadMeasurements();
+      ref.read(bodyMeasurementProvider.notifier).loadGoal(1);
     });
   }
 
   void _showAddMeasurementModal(BuildContext context) {
-    final provider = Provider.of<BodyMeasurementProvider>(
-      context,
-      listen: false,
-    );
     final weightController = TextEditingController();
+    final heightController = TextEditingController();
     final fatController = TextEditingController();
+    final muscleController = TextEditingController();
     final waistController = TextEditingController();
+    final chestController = TextEditingController();
+    final hipController = TextEditingController();
     final armController = TextEditingController();
 
     showModalBottomSheet(
@@ -52,64 +47,108 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
           right: 16,
           top: 16,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Yeni Ölçüm Ekle',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Yeni Ölçüm Ekle',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(weightController, 'Ağırlık (kg)'),
-            const SizedBox(height: 12),
-            _buildTextField(fatController, 'Yağ Oranı (%)'),
-            const SizedBox(height: 12),
-            _buildTextField(waistController, 'Bel Çevresi (cm)'),
-            const SizedBox(height: 12),
-            _buildTextField(armController, 'Kol Çevresi (cm)'),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF13EC5B),
-                  foregroundColor: const Color(0xFF102216),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 16),
+              _buildTextField(
+                weightController,
+                'Ağırlık (kg)',
+                Icons.monitor_weight,
+              ),
+              const SizedBox(height: 12),
+              _buildTextField(heightController, 'Boy (cm)', Icons.height),
+              const SizedBox(height: 12),
+              _buildTextField(fatController, 'Yağ Oranı (%)', Icons.water_drop),
+              const SizedBox(height: 12),
+              _buildTextField(
+                muscleController,
+                'Kas Kütlesi (kg)',
+                Icons.fitness_center,
+              ),
+              const SizedBox(height: 12),
+              _buildTextField(
+                waistController,
+                'Bel Çevresi (cm)',
+                Icons.accessibility_new,
+              ),
+              const SizedBox(height: 12),
+              _buildTextField(
+                chestController,
+                'Göğüs Çevresi (cm)',
+                Icons.accessibility,
+              ),
+              const SizedBox(height: 12),
+              _buildTextField(
+                hipController,
+                'Kalça Çevresi (cm)',
+                Icons.h_mobiledata,
+              ),
+              const SizedBox(height: 12),
+              _buildTextField(
+                armController,
+                'Kol Çevresi (cm)',
+                Icons.sports_martial_arts,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF13EC5B),
+                    foregroundColor: const Color(0xFF102216),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    final newMeasurement = BodyMeasurement()
+                      ..kullaniciId = 1
+                      ..agirlik = double.tryParse(weightController.text) ?? 0
+                      ..boy = double.tryParse(heightController.text) ?? 0
+                      ..vucutYuzdesi = double.tryParse(fatController.text)
+                      ..kasKutlesi = double.tryParse(muscleController.text)
+                      ..belCevresi = double.tryParse(waistController.text)
+                      ..gogusCevresi = double.tryParse(chestController.text)
+                      ..kalcaCevresi = double.tryParse(hipController.text)
+                      ..pazuCevresi = double.tryParse(armController.text)
+                      ..tarih = DateTime.now();
+
+                    ref
+                        .read(bodyMeasurementProvider.notifier)
+                        .addMeasurement(newMeasurement);
+                    Navigator.pop(context);
+                  },
+                  child: const Text(
+                    'Kaydet',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
-                onPressed: () {
-                  final newMeasurement = BodyMeasurement()
-                    ..kullaniciId = 1
-                    ..agirlik = double.tryParse(weightController.text) ?? 0
-                    ..vucutYuzdesi = double.tryParse(fatController.text)
-                    ..belCevresi = double.tryParse(waistController.text)
-                    ..pazuCevresi = double.tryParse(armController.text)
-                    ..tarih = DateTime.now();
-
-                  provider.addMeasurement(newMeasurement);
-                  Navigator.pop(context);
-                },
-                child: const Text(
-                  'Kaydet',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
               ),
-            ),
-            const SizedBox(height: 24),
-          ],
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+  ) {
     return TextField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -117,6 +156,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white70),
+        prefixIcon: Icon(icon, color: const Color(0xFF13EC5B), size: 20),
         filled: true,
         fillColor: Colors.white.withOpacity(0.05),
         border: OutlineInputBorder(
@@ -133,8 +173,8 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<BodyMeasurementProvider>(context);
-    final measurements = provider.measurements;
+    final state = ref.watch(bodyMeasurementProvider);
+    final measurements = state.measurements;
 
     // Sort measurements by date (newest first)
     final sortedMeasurements = List<BodyMeasurement>.from(measurements)
@@ -144,9 +184,14 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
         ? sortedMeasurements.first
         : null;
 
-    final pages = [
-      // Ölçümler Sekmesi
-      SingleChildScrollView(
+    return Scaffold(
+      backgroundColor: const Color(0xFF102216),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddMeasurementModal(context),
+        backgroundColor: const Color(0xFF13EC5B),
+        child: const Icon(Icons.add, color: Color(0xFF102216)),
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,6 +208,12 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                     '${latest?.agirlik.toStringAsFixed(1) ?? "-"} kg',
                     Icons.monitor_weight_outlined,
                     const Color(0xFF13EC5B),
+                  ),
+                  _buildSummaryCard(
+                    'Boy',
+                    '${latest?.boy.toStringAsFixed(0) ?? "-"} cm',
+                    Icons.height,
+                    Colors.cyanAccent,
                   ),
                   _buildSummaryCard(
                     'Yağ Oranı',
@@ -254,7 +305,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                               },
                               interval: (sortedMeasurements.length / 5)
                                   .ceil()
-                                  .toDouble(), // Show ~5 labels
+                                  .toDouble(),
                             ),
                           ),
                           leftTitles: AxisTitles(
@@ -327,20 +378,22 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.white.withOpacity(0.1)),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            DateFormat('d MMMM yyyy', 'tr_TR').format(m.tarih),
+                            DateFormat(
+                              'd MMMM yyyy',
+                              'tr_TR',
+                            ).format(m.tarih ?? DateTime.now()),
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 4),
                           Text(
                             '${m.agirlik} kg',
                             style: const TextStyle(
@@ -351,25 +404,27 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                           ),
                         ],
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 4,
                         children: [
+                          if (m.boy > 0)
+                            _buildInfoChip(
+                              'Boy: ${m.boy.toStringAsFixed(0)} cm',
+                            ),
                           if (m.vucutYuzdesi != null)
-                            Text(
-                              'Yağ: %${m.vucutYuzdesi}',
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                              ),
-                            ),
+                            _buildInfoChip('Yağ: %${m.vucutYuzdesi}'),
+                          if (m.kasKutlesi != null)
+                            _buildInfoChip('Kas: ${m.kasKutlesi} kg'),
                           if (m.belCevresi != null)
-                            Text(
-                              'Bel: ${m.belCevresi} cm',
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                              ),
-                            ),
+                            _buildInfoChip('Bel: ${m.belCevresi} cm'),
+                          if (m.gogusCevresi != null)
+                            _buildInfoChip('Göğüs: ${m.gogusCevresi} cm'),
+                          if (m.kalcaCevresi != null)
+                            _buildInfoChip('Kalça: ${m.kalcaCevresi} cm'),
+                          if (m.pazuCevresi != null)
+                            _buildInfoChip('Kol: ${m.pazuCevresi} cm'),
                         ],
                       ),
                     ],
@@ -380,44 +435,6 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
           ],
         ),
       ),
-      const Center(
-        child: Text('Beslenme Sayfası', style: TextStyle(color: Colors.white)),
-      ),
-      const Center(
-        child: Text('İlerleme Sayfası', style: TextStyle(color: Colors.white)),
-      ),
-    ];
-
-    return Scaffold(
-      backgroundColor: const Color(0xFF102216),
-      body: pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color(0xFF102216),
-        selectedItemColor: const Color(0xFF13EC5B),
-        unselectedItemColor: Colors.white70,
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.monitor_weight),
-            label: 'Ölçümler',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.fastfood),
-            label: 'Beslenme',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: 'İlerleme',
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddMeasurementModal(context),
-        backgroundColor: const Color(0xFF13EC5B),
-        child: const Icon(Icons.add, color: Color(0xFF102216)),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
@@ -460,6 +477,20 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildInfoChip(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(color: Colors.white70, fontSize: 11),
       ),
     );
   }
