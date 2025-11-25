@@ -439,12 +439,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
   }
 
   Widget _buildMealsList(NutritionState state) {
-    final mealTypes = [
-      'Kahvaltı',
-      'Öğle Yemeği',
-      'Akşam Yemeği',
-      'Ara Öğünler',
-    ];
+    final mealTypes = ['Kahvaltı', 'Öğle Yemeği', 'Akşam Yemeği', 'Ara Öğünle'];
 
     return Column(
       children: mealTypes.map((mealType) {
