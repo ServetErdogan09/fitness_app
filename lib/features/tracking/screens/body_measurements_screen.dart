@@ -17,11 +17,13 @@ class BodyMeasurementScreen extends ConsumerStatefulWidget {
 }
 
 class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
+  String _selectedMetric = 'Ağırlık';
+  String _selectedPeriod = '1A'; // 1A, 3A, 6A, Tümü
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(bodyMeasurementProvider.notifier).loadMeasurements();
       ref.read(bodyMeasurementProvider.notifier).loadGoal(1);
     });
   }
@@ -241,33 +243,43 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
-                  _buildSummaryCard(
+                  _buildGoalCard(
                     'Ağırlık',
-                    '${latest?.agirlik.toStringAsFixed(1) ?? "-"} kg',
+                    latest?.agirlik,
+                    state.goal?.hedefAgirlik,
+                    'kg',
                     Icons.monitor_weight_outlined,
                     const Color(0xFF13EC5B),
                   ),
-                  _buildSummaryCard(
+                  _buildGoalCard(
                     'Boy',
-                    '${latest?.boy.toStringAsFixed(0) ?? "-"} cm',
+                    latest?.boy,
+                    null, // Boy için hedef yok genelde
+                    'cm',
                     Icons.height,
                     Colors.cyanAccent,
                   ),
-                  _buildSummaryCard(
+                  _buildGoalCard(
                     'Yağ Oranı',
-                    '${latest?.vucutYuzdesi?.toStringAsFixed(1) ?? "-"} %',
+                    latest?.vucutYuzdesi,
+                    state.goal?.hedefVucutYuzdesi,
+                    '%',
                     Icons.water_drop_outlined,
                     Colors.orangeAccent,
                   ),
-                  _buildSummaryCard(
+                  _buildGoalCard(
                     'Bel',
-                    '${latest?.belCevresi?.toStringAsFixed(1) ?? "-"} cm',
+                    latest?.belCevresi,
+                    state.goal?.hedefBelCevresi,
+                    'cm',
                     Icons.accessibility_new_outlined,
                     Colors.blueAccent,
                   ),
-                  _buildSummaryCard(
+                  _buildGoalCard(
                     'Kol',
-                    '${latest?.pazuCevresi?.toStringAsFixed(1) ?? "-"} cm',
+                    latest?.pazuCevresi,
+                    null,
+                    'cm',
                     Icons.fitness_center_outlined,
                     Colors.purpleAccent,
                   ),
@@ -276,8 +288,129 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
             ),
             const SizedBox(height: 24),
 
+            // Hedef Belirleme Bölümü
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Hedef Belirleme',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => _showGoalModal(context, state.goal),
+                  icon: const Icon(
+                    Icons.edit_outlined,
+                    color: AppColors.primary,
+                    size: 18,
+                  ),
+                  label: const Text(
+                    'Düzenle',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (state.goal != null) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                ),
+                child: Column(
+                  children: [
+                    if (state.goal!.hedefAgirlik > 0) ...[
+                      _buildGoalProgressBar(
+                        'Ağırlık',
+                        latest?.agirlik ?? 0,
+                        state.goal!.hedefAgirlik,
+                        'kg',
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    if (state.goal!.hedefVucutYuzdesi != null &&
+                        state.goal!.hedefVucutYuzdesi! > 0) ...[
+                      _buildGoalProgressBar(
+                        'Yağ Oranı',
+                        latest?.vucutYuzdesi ?? 0,
+                        state.goal!.hedefVucutYuzdesi!,
+                        '%',
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    if (state.goal!.hedefBelCevresi != null &&
+                        state.goal!.hedefBelCevresi! > 0) ...[
+                      _buildGoalProgressBar(
+                        'Bel Çevresi',
+                        latest?.belCevresi ?? 0,
+                        state.goal!.hedefBelCevresi!,
+                        'cm',
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ] else ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.track_changes, color: Colors.white54, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Henüz hedef belirlemediniz',
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => _showGoalModal(context, null),
+                      child: const Text(
+                        'Hedef Belirle',
+                        style: TextStyle(color: AppColors.primary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
+
+            SizedBox(
+              height: 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  _buildMetricChip('Ağırlık'),
+                  const SizedBox(width: 8),
+                  _buildMetricChip('Boy'),
+                  const SizedBox(width: 8),
+                  _buildMetricChip('Yağ Oranı'),
+                  const SizedBox(width: 8),
+                  _buildMetricChip('Bel'),
+                  const SizedBox(width: 8),
+                  _buildMetricChip('Kol'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
             // Chart Section
-            const Text(
+            Text(
               'İlerleme Grafiği',
               style: TextStyle(
                 color: Colors.white,
@@ -287,21 +420,54 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
             ),
             const SizedBox(height: 16),
             Container(
-              height: 250,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.white.withOpacity(0.1)),
               ),
-              child: sortedMeasurements.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'Henüz veri yok',
-                        style: TextStyle(color: Colors.white54),
+              child: Column(
+                children: [
+                  // Header with metric name and period selector
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _getMetricLabel(_selectedMetric),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
                       ),
-                    )
-                  : linerChart(sortedMeasurements),
+                      Row(
+                        children: [
+                          _buildPeriodChip('1A'),
+                          const SizedBox(width: 6),
+                          _buildPeriodChip('3A'),
+                          const SizedBox(width: 6),
+                          _buildPeriodChip('6A'),
+                          const SizedBox(width: 6),
+                          _buildPeriodChip('Tümü'),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 220,
+                    child: sortedMeasurements.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'Henüz veri yok',
+                              style: TextStyle(color: Colors.white54),
+                            ),
+                          )
+                        : _buildLineChart(
+                            _getFilteredMeasurements(sortedMeasurements),
+                          ),
+                  ),
+                ],
+              ),
             ),
 
             const SizedBox(height: 24),
@@ -326,7 +492,7 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
     );
   }
 
-  LineChart linerChart(List<BodyMeasurement> sortedMeasurements) {
+  LineChart _buildLineChart(List<BodyMeasurement> sortedMeasurements) {
     return LineChart(
       LineChartData(
         gridData: FlGridData(
@@ -354,7 +520,7 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
-                      DateFormat('d MMM').format(date),
+                      DateFormat('MMM', 'tr_TR').format(date),
                       style: const TextStyle(
                         color: Colors.white54,
                         fontSize: 10,
@@ -364,7 +530,7 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
                 }
                 return const SizedBox();
               },
-              interval: (sortedMeasurements.length / 5).ceil().toDouble(),
+              interval: (sortedMeasurements.length / 6).ceil().toDouble(),
             ),
           ),
           leftTitles: AxisTitles(
@@ -383,13 +549,7 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
         borderData: FlBorderData(show: false),
         lineBarsData: [
           LineChartBarData(
-            spots: List.generate(sortedMeasurements.length, (index) {
-              final reversedIndex = sortedMeasurements.length - 1 - index;
-              return FlSpot(
-                index.toDouble(),
-                sortedMeasurements[reversedIndex].agirlik,
-              );
-            }),
+            spots: _getMetricSpots(sortedMeasurements),
             isCurved: true,
             color: const Color(0xFF13EC5B),
             barWidth: 3,
@@ -401,6 +561,69 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  List<FlSpot> _getMetricSpots(List<BodyMeasurement> sortedMeasurements) {
+    final spots = <FlSpot>[];
+
+    for (int i = 0; i < sortedMeasurements.length; i++) {
+      final reversedIndex = sortedMeasurements.length - 1 - i;
+      final measurement = sortedMeasurements[reversedIndex];
+      double? value;
+
+      switch (_selectedMetric) {
+        case 'Ağırlık':
+          value = measurement.agirlik;
+          break;
+        case 'Boy':
+          value = measurement.boy;
+          break;
+        case 'Yağ Oranı':
+          value = measurement.vucutYuzdesi;
+          break;
+        case 'Bel':
+          value = measurement.belCevresi;
+          break;
+        case 'Kol':
+          value = measurement.pazuCevresi;
+          break;
+      }
+
+      if (value != null && value > 0) {
+        spots.add(FlSpot(i.toDouble(), value));
+      }
+    }
+
+    return spots;
+  }
+
+  Widget _buildMetricChip(String metric) {
+    final isSelected = _selectedMetric == metric;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedMetric = metric),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFF13EC5B)
+              : Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFF13EC5B)
+                : Colors.white.withOpacity(0.1),
+          ),
+        ),
+        child: Text(
+          metric,
+          style: TextStyle(
+            color: isSelected ? const Color(0xFF102216) : Colors.white,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 14,
+          ),
+        ),
       ),
     );
   }
@@ -447,7 +670,6 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
             ],
           ),
 
-          // 👉 Kart içeriği
           child: _historyCard(m),
         );
       },
@@ -516,12 +738,89 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
     );
   }
 
-  Widget _buildSummaryCard(
+  Widget _buildPeriodChip(String period) {
+    final isSelected = _selectedPeriod == period;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedPeriod = period),
+      child: Container(
+        height: 28,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFF13EC5B).withOpacity(0.3)
+              : Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Text(
+            period,
+            style: TextStyle(
+              color: isSelected ? const Color(0xFF13EC5B) : Colors.white,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getMetricLabel(String metric) {
+    switch (metric) {
+      case 'Ağırlık':
+        return 'Ağırlık (kg)';
+      case 'Boy':
+        return 'Boy (cm)';
+      case 'Yağ Oranı':
+        return 'Yağ Oranı (%)';
+      case 'Bel':
+        return 'Bel Çevresi (cm)';
+      case 'Kol':
+        return 'Kol Çevresi (cm)';
+      default:
+        return metric;
+    }
+  }
+
+  List<BodyMeasurement> _getFilteredMeasurements(
+    List<BodyMeasurement> measurements,
+  ) {
+    if (_selectedPeriod == 'Tümü') return measurements;
+
+    final now = DateTime.now();
+    int months;
+
+    switch (_selectedPeriod) {
+      case '1A':
+        months = 1;
+        break;
+      case '3A':
+        months = 3;
+        break;
+      case '6A':
+        months = 6;
+        break;
+      default:
+        return measurements;
+    }
+
+    final cutoffDate = DateTime(now.year, now.month - months, now.day);
+    return measurements.where((m) => m.tarih.isAfter(cutoffDate)).toList();
+  }
+
+  Widget _buildGoalCard(
     String title,
-    String value,
+    double? currentValue,
+    double? goalValue,
+    String unit,
     IconData icon,
     Color color,
   ) {
+    final hasGoal = goalValue != null && goalValue > 0;
+    final difference = hasGoal && currentValue != null
+        ? currentValue - goalValue
+        : null;
+
     return Container(
       width: 140,
       margin: const EdgeInsets.only(right: 12),
@@ -539,21 +838,54 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
             children: [
               Icon(icon, color: color, size: 20),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            value,
+            currentValue != null
+                ? '${currentValue.toStringAsFixed(1)} $unit'
+                : '-',
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
               fontSize: 18,
             ),
           ),
+          if (hasGoal && difference != null) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  difference > 0 ? Icons.arrow_upward : Icons.arrow_downward,
+                  color: difference > 0 ? Colors.redAccent : Colors.greenAccent,
+                  size: 14,
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    difference > 0
+                        ? '+${difference.abs().toStringAsFixed(1)} $unit'
+                        : '-${difference.abs().toStringAsFixed(1)} $unit',
+                    style: TextStyle(
+                      color: difference > 0
+                          ? Colors.redAccent
+                          : Colors.greenAccent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -638,6 +970,227 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
             child: const Text("Sil"),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGoalProgressBar(
+    String title,
+    double currentValue,
+    double goalValue,
+    String unit,
+  ) {
+    final isDecreasing = currentValue > goalValue;
+    final difference = (currentValue - goalValue).abs();
+    final progress = isDecreasing
+        ? ((currentValue - goalValue) / currentValue).clamp(0.0, 1.0)
+        : ((goalValue - currentValue) / goalValue).clamp(0.0, 1.0);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '$title Hedefi',
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Mevcut',
+                  style: TextStyle(color: Colors.white60, fontSize: 12),
+                ),
+                Text(
+                  '${currentValue.toStringAsFixed(1)} $unit',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Text(
+                  'Hedef',
+                  style: TextStyle(color: Colors.white60, fontSize: 12),
+                ),
+                Text(
+                  '${goalValue.toStringAsFixed(1)} $unit',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: LinearProgressIndicator(
+            value: progress,
+            backgroundColor: Colors.white.withOpacity(0.1),
+            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+            minHeight: 10,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Kalan: ${difference.toStringAsFixed(1)} $unit',
+              style: const TextStyle(color: Colors.white60, fontSize: 11),
+            ),
+            Text(
+              '${(progress * 100).toStringAsFixed(0)}%',
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void _showGoalModal(BuildContext context, BodyMeasurementGoal? currentGoal) {
+    final weightController = TextEditingController(
+      text: currentGoal?.hedefAgirlik.toString() ?? '',
+    );
+    final fatController = TextEditingController(
+      text: currentGoal?.hedefVucutYuzdesi?.toString() ?? '',
+    );
+    final waistController = TextEditingController(
+      text: currentGoal?.hedefBelCevresi?.toString() ?? '',
+    );
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF102216),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 16,
+          right: 16,
+          top: 16,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Hedef Belirleme',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white70),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Ulaşmak istediğiniz hedef değerleri girin',
+                style: TextStyle(color: Colors.white54, fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+              _buildTextField(
+                weightController,
+                'Hedef Ağırlık (kg)',
+                Icons.monitor_weight,
+              ),
+              const SizedBox(height: 16),
+              _buildTextField(
+                fatController,
+                'Hedef Yağ Oranı (%)',
+                Icons.water_drop,
+              ),
+              const SizedBox(height: 16),
+              _buildTextField(
+                waistController,
+                'Hedef Bel Çevresi (cm)',
+                Icons.accessibility_new,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF13EC5B),
+                    foregroundColor: const Color(0xFF102216),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () async {
+                    final goal = BodyMeasurementGoal()
+                      ..kullaniciId = 1
+                      ..hedefAgirlik =
+                          double.tryParse(weightController.text) ?? 0
+                      ..hedefVucutYuzdesi = double.tryParse(fatController.text)
+                      ..hedefBelCevresi = double.tryParse(waistController.text)
+                      ..sonGuncellemeTarihi = DateTime.now();
+
+                    if (currentGoal != null) {
+                      goal.id = currentGoal.id;
+                    }
+
+                    await ref
+                        .read(bodyMeasurementProvider.notifier)
+                        .updateGoal(goal);
+
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Hedefler güncellendi'),
+                          backgroundColor: AppColors.primary,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text(
+                    'Hedefleri Kaydet',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
       ),
     );
   }

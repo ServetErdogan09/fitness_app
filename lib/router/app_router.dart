@@ -1,3 +1,4 @@
+import 'package:fitness_app/features/tracking/screens/nutrition_screen.dart';
 import 'package:fitness_app/features/tracking/screens/body_measurements_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -91,20 +92,6 @@ class ScaffoldWithNavBar extends StatelessWidget {
             label: 'Antrenman',
           ),
         ],
-      ),
-    );
-  }
-}
-
-class NutritionScreen extends StatelessWidget {
-  const NutritionScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Beslenme Sayfası',
-        style: TextStyle(color: Colors.white, fontSize: 24),
       ),
     );
   }

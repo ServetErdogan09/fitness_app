@@ -1,9 +1,7 @@
-// lib/models/nutrition.dart
 import 'package:isar/isar.dart';
 
 part 'nutrition.g.dart';
 
-// yiycek verileri modeli
 @collection
 class Meal {
   Id id = Isar.autoIncrement;
@@ -38,7 +36,7 @@ class FoodEntry {
 class NutritionGoal {
   Id id = Isar.autoIncrement;
   late int kullaniciId;
-
+  late DateTime tarih;
   late double hedefKalori;
   late double hedefKarbonhidrat;
   late double hedefProtein;

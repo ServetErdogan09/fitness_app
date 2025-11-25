@@ -1,6 +1,6 @@
+import 'package:fitness_app/core/providers/database_provider.dart';
 import 'package:fitness_app/core/services/local_databse_service.dart';
 import 'package:fitness_app/models/body_measurement.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BodyMeasurementState {
@@ -71,10 +71,6 @@ class BodyMeasurementNotifier extends StateNotifier<BodyMeasurementState> {
     await loadGoal(kullaniciId);
   }
 }
-
-final databaseServiceProvider = Provider<DatabaseService>((ref) {
-  throw UnimplementedError('DatabaseService must be overridden');
-});
 
 final bodyMeasurementProvider =
     StateNotifierProvider<BodyMeasurementNotifier, BodyMeasurementState>((ref) {
