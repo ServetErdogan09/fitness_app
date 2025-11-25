@@ -16,7 +16,7 @@ class MyApp extends ConsumerWidget {
         brightness: Brightness.dark,
         primaryColor: const Color(0xFF13EC5B),
         scaffoldBackgroundColor: const Color(0xFF102216),
-        fontFamily: 'Manrope',
+
         useMaterial3: true,
       ),
       routerConfig: router,

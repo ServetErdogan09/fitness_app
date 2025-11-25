@@ -1,6 +1,7 @@
 import 'package:fitness_app/config/app_themes.dart';
 import 'package:fitness_app/features/tracking/provider/body_measurement_notifier.dart';
 import 'package:fitness_app/features/tracking/screens/measurement_edit_screen.dart';
+import 'package:fitness_app/features/tracking/widgets/build_text_filed.dart';
 import 'package:fitness_app/models/body_measurement.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -66,41 +67,41 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              _buildTextField(
+              buildTextField(
                 weightController,
                 'Ağırlık (kg)',
                 Icons.monitor_weight,
               ),
               const SizedBox(height: 12),
-              _buildTextField(heightController, 'Boy (cm)', Icons.height),
+              buildTextField(heightController, 'Boy (cm)', Icons.height),
               const SizedBox(height: 12),
-              _buildTextField(fatController, 'Yağ Oranı (%)', Icons.water_drop),
+              buildTextField(fatController, 'Yağ Oranı (%)', Icons.water_drop),
               const SizedBox(height: 12),
-              _buildTextField(
+              buildTextField(
                 muscleController,
                 'Kas Kütlesi (kg)',
                 Icons.fitness_center,
               ),
               const SizedBox(height: 12),
-              _buildTextField(
+              buildTextField(
                 waistController,
                 'Bel Çevresi (cm)',
                 Icons.accessibility_new,
               ),
               const SizedBox(height: 12),
-              _buildTextField(
+              buildTextField(
                 chestController,
                 'Göğüs Çevresi (cm)',
                 Icons.accessibility,
               ),
               const SizedBox(height: 12),
-              _buildTextField(
+              buildTextField(
                 hipController,
                 'Kalça Çevresi (cm)',
                 Icons.h_mobiledata,
               ),
               const SizedBox(height: 12),
-              _buildTextField(
+              buildTextField(
                 armController,
                 'Kol Çevresi (cm)',
                 Icons.sports_martial_arts,
@@ -180,33 +181,6 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
               const SizedBox(height: 24),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(
-    TextEditingController controller,
-    String label,
-    IconData icon,
-  ) {
-    return TextField(
-      controller: controller,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Colors.white70),
-        prefixIcon: Icon(icon, color: const Color(0xFF13EC5B), size: 20),
-        filled: true,
-        fillColor: Colors.white.withOpacity(0.05),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF13EC5B)),
         ),
       ),
     );
@@ -1121,19 +1095,19 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
                 style: TextStyle(color: Colors.white54, fontSize: 14),
               ),
               const SizedBox(height: 24),
-              _buildTextField(
+              buildTextField(
                 weightController,
                 'Hedef Ağırlık (kg)',
                 Icons.monitor_weight,
               ),
               const SizedBox(height: 16),
-              _buildTextField(
+              buildTextField(
                 fatController,
                 'Hedef Yağ Oranı (%)',
                 Icons.water_drop,
               ),
               const SizedBox(height: 16),
-              _buildTextField(
+              buildTextField(
                 waistController,
                 'Hedef Bel Çevresi (cm)',
                 Icons.accessibility_new,

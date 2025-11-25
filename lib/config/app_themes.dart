@@ -9,18 +9,19 @@ class AppColors {
   static const Color white10 = Color.fromRGBO(255, 255, 255, 0.1);
   static const Color green400 = Color(0xFF22C55E);
   static const Color red400 = Color(0xFFEF4444);
+  static const Color darkContainer = Color(0xFF102216);
 }
 
 class AppFonts {
-  static const String display = 'Manrope';
+  static const String display = 'LexendExa';
 }
 
 class AppTheme {
-  static final ThemeData lightTheme = ThemeData(
+  static ThemeData lightTheme = ThemeData(
     scaffoldBackgroundColor: AppColors.backgroundLight,
     primaryColor: AppColors.primary,
     brightness: Brightness.light,
-    fontFamily: AppFonts.display,
+    fontFamily: AppFonts.display, // tüm Text widget'larının default'u
     textTheme: const TextTheme(
       bodyLarge: TextStyle(color: Colors.black),
       bodyMedium: TextStyle(color: Colors.black87),
@@ -30,13 +31,13 @@ class AppTheme {
         fontSize: 20,
       ),
       titleMedium: TextStyle(color: Colors.black87),
+      titleSmall: TextStyle(color: Colors.black87),
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.backgroundLight,
       iconTheme: IconThemeData(color: Colors.black),
       titleTextStyle: TextStyle(
         color: Colors.black,
-        fontFamily: AppFonts.display,
         fontWeight: FontWeight.bold,
         fontSize: 20,
       ),
@@ -47,7 +48,7 @@ class AppTheme {
     ),
   );
 
-  static final ThemeData darkTheme = ThemeData(
+  static ThemeData darkTheme = ThemeData(
     scaffoldBackgroundColor: AppColors.backgroundDark,
     primaryColor: AppColors.primary,
     brightness: Brightness.dark,
@@ -61,13 +62,13 @@ class AppTheme {
         fontSize: 20,
       ),
       titleMedium: TextStyle(color: AppColors.white70),
+      titleSmall: TextStyle(color: AppColors.white70),
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.backgroundDark,
       iconTheme: IconThemeData(color: Colors.white),
       titleTextStyle: TextStyle(
         color: Colors.white,
-        fontFamily: AppFonts.display,
         fontWeight: FontWeight.bold,
         fontSize: 20,
       ),

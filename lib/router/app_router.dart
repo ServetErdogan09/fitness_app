@@ -1,3 +1,4 @@
+import 'package:fitness_app/features/tracking/screens/add_food_screen.dart';
 import 'package:fitness_app/features/tracking/screens/nutrition_screen.dart';
 import 'package:fitness_app/features/tracking/screens/body_measurements_screen.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ class AppRoutes {
   static const measurements = '/measurements';
   static const nutrition = '/nutrition';
   static const training = '/training';
+  static const addScreen = '/addfood/:mealId';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -34,6 +36,17 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: TrainingScreen()),
           ),
+
+          /*
+          GoRoute(
+            path: '${AppRoutes.addScreen}/:mealId',
+            pageBuilder: (context, state) {
+              final mealId =
+                  int.tryParse(state.pathParameters['mealId'] ?? '0') ?? 0;
+              return NoTransitionPage(child: AddFoodScreen(mealId: mealId));
+            },
+          ),
+          */
         ],
       ),
     ],

@@ -1,6 +1,7 @@
 import 'package:fitness_app/config/app_themes.dart';
+import 'package:fitness_app/features/tracking/provider/foodEntry.notifier.dart';
 import 'package:fitness_app/features/tracking/provider/nutrition_notifier.dart';
-import 'package:fitness_app/features/tracking/screens/add_food_screen.dart';
+import 'package:fitness_app/features/tracking/widgets/build_text_filed.dart';
 import 'package:fitness_app/models/nutrition.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +15,7 @@ class NutritionScreen extends ConsumerStatefulWidget {
 }
 
 class _NutritionScreenState extends ConsumerState<NutritionScreen> {
-  String _selectedPeriod = 'Günlük';
+  // String _selectedPeriod = 'Günlük';
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +110,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: AppColors.darkContainer.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
@@ -243,7 +244,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: AppColors.darkContainer.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
@@ -261,9 +262,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                 ),
               ),
               TextButton.icon(
-                onPressed: () {
-                  //
-                },
+                onPressed: () => _showGoalModal(context, goal),
                 icon: const Text(
                   'Düzenle',
                   style: TextStyle(
@@ -281,6 +280,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
           ),
           const SizedBox(height: 16),
 
+          /*
           // Period Selector
           Container(
             padding: const EdgeInsets.all(4),
@@ -290,12 +290,12 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
             ),
             child: Row(
               children: [
-                Expanded(child: _buildPeriodButton('Günlük')),
-                Expanded(child: _buildPeriodButton('Haftalık')),
+                //Expanded(child: _buildPeriodButton('Günlük')),
+                // Expanded(child: _buildPeriodButton('Haftalık')),
               ],
             ),
           ),
-
+          */
           const SizedBox(height: 16),
 
           // Goal Cards
@@ -351,6 +351,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
     );
   }
 
+  /* günlük - haftalık
   Widget _buildPeriodButton(String period) {
     final isSelected = _selectedPeriod == period;
     return GestureDetector(
@@ -376,6 +377,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
       ),
     );
   }
+  */
 
   Widget _buildGoalCard(
     String name,
@@ -387,44 +389,51 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: AppColors.darkContainer.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                name,
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          RichText(
-            text: TextSpan(
-              text: value.toStringAsFixed(0),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(255, 16, 166, 66).withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                TextSpan(
-                  text: ' $unit',
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 10,
-                    fontWeight: FontWeight.normal,
-                  ),
+                Icon(icon, color: color, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  name,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            RichText(
+              text: TextSpan(
+                text: value.toStringAsFixed(0),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                children: [
+                  TextSpan(
+                    text: ' $unit',
+                    style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 10,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -451,16 +460,9 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
   }
 
   Widget _buildMealCard(String mealType, Meal? meal) {
-    void navigateToAddFood() {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const AddFoodScreen()));
-      print('$mealType için yiyecek ekleniyor...');
-    }
-
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: AppColors.darkContainer.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
@@ -482,28 +484,52 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
           collapsedIconColor: Colors.white54,
           children: [
             if (meal != null)
-              /*
-              MealDetailView(
-                mealId: meal.id!, // Gerekli ID'yi Family Provider'a gönderiyoruz
-                mealType: mealType,
-                onAddFood: navigateToAddFood, 
-              ),
-              */
-              TextButton.icon(
-                onPressed: () {},
-                icon: const Icon(
-                  Icons.add_circle_outline,
-                  color: AppColors.primary,
-                  size: 20,
+              Consumer(
+                builder: (context, ref, _) {
+                  final foodState = ref.watch(foodEntryProvider(meal.id));
+
+                  if (foodState.isLoading == true) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final foodEntries = foodState.foodEntry;
+
+                  if (foodEntries.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        'Henüz yemek eklenmemiş',
+                        style: TextStyle(color: Colors.white54, fontSize: 14),
+                      ),
+                    );
+                  }
+
+                  return Column(
+                    children: foodEntries
+                        .map((food) => _buildFoodItem(food))
+                        .toList(),
+                  );
+                },
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Henüz yemek eklenmemiş',
+                  style: TextStyle(color: Colors.white54, fontSize: 14),
                 ),
-                label: const Text(
-                  'Yiyecek Ekle',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
               ),
+            TextButton.icon(
+              onPressed: () => _showAddFoodBottomSheet(context, mealType),
+              icon: const Icon(
+                Icons.add_circle_outline,
+                color: AppColors.primary,
+              ),
+              label: const Text(
+                'Yiyecek Ekle',
+                style: TextStyle(color: AppColors.primary),
+              ),
+            ),
           ],
         ),
       ),
@@ -515,16 +541,6 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.restaurant, color: AppColors.primary),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -553,6 +569,316 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showAddFoodBottomSheet(BuildContext context, String mealType) {
+    final foodNameController = TextEditingController();
+    final gramsController = TextEditingController();
+    final caloriesController = TextEditingController();
+    final carbsController = TextEditingController();
+    final fatController = TextEditingController();
+    final proteinController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF102216),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 16,
+          right: 16,
+          top: 16,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Yiyecek Ekle',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        mealType,
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white70),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Yiyecek bilgilerini girin',
+                style: TextStyle(color: Colors.white54, fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+              buildTextField(
+                foodNameController,
+                'Yiyecek Adı',
+                Icons.restaurant,
+              ),
+              const SizedBox(height: 16),
+              buildTextField(gramsController, 'Miktar (gram)', Icons.scale),
+              const SizedBox(height: 16),
+              buildTextField(
+                caloriesController,
+                'Kalori (kcal)',
+                Icons.local_fire_department,
+              ),
+              const SizedBox(height: 16),
+              buildTextField(
+                carbsController,
+                'Karbonhidrat (g)',
+                Icons.bakery_dining,
+              ),
+              const SizedBox(height: 16),
+              buildTextField(fatController, 'Yağ (g)', Icons.water_drop),
+              const SizedBox(height: 16),
+              buildTextField(proteinController, 'Protein (g)', Icons.egg),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF13EC5B),
+                    foregroundColor: const Color(0xFF102216),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () async {
+                    // Validation
+                    if (foodNameController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Lütfen yiyecek adını girin'),
+                          backgroundColor: Colors.red,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    final grams = double.tryParse(gramsController.text) ?? 0;
+                    final calories =
+                        double.tryParse(caloriesController.text) ?? 0;
+                    final carbs = double.tryParse(carbsController.text) ?? 0;
+                    final fat = double.tryParse(fatController.text) ?? 0;
+                    final protein =
+                        double.tryParse(proteinController.text) ?? 0;
+
+                    if (grams <= 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text(
+                            'Lütfen geçerli bir miktar girin',
+                          ),
+                          backgroundColor: Colors.red,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    final foodEntry = FoodEntry()
+                      ..yiyecekAdi = foodNameController.text.trim()
+                      ..porsiyonMiktari = grams
+                      ..porsiyonBirim = 'gr'
+                      ..kalori = calories
+                      ..karbonhidrat = carbs
+                      ..yag = fat
+                      ..protein = protein;
+
+                    await ref
+                        .read(nutritionNotifierProvider.notifier)
+                        .addFoodEntry(newFood: foodEntry, mealType: mealType);
+
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${foodNameController.text} eklendi'),
+                          backgroundColor: AppColors.primary,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text(
+                    'Kaydet',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showGoalModal(BuildContext context, NutritionGoal? currentGoal) {
+    final targetCalories = TextEditingController(
+      text: currentGoal?.hedefKalori.toString() ?? '',
+    );
+    final targetCarbohydrate = TextEditingController(
+      text: currentGoal?.hedefKarbonhidrat.toString() ?? '',
+    );
+    final targetProtein = TextEditingController(
+      text: currentGoal?.hedefProtein.toString() ?? '',
+    );
+
+    final targetFat = TextEditingController(
+      text: currentGoal?.hedefYag.toString() ?? '',
+    );
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF102216),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 16,
+          right: 16,
+          top: 16,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Hedef Belirleme',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white70),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Ulaşmak istediğiniz hedef değerleri girin',
+                style: TextStyle(color: Colors.white54, fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+              buildTextField(
+                targetCalories,
+                'Hedef Calori (kcal) ',
+                Icons.fire_extinguisher,
+              ),
+              const SizedBox(height: 16),
+              buildTextField(
+                targetCarbohydrate,
+                'Hedef Karbonhidarat (g) ',
+                Icons.bakery_dining,
+              ),
+              const SizedBox(height: 16),
+              buildTextField(targetProtein, 'Hedef Protein (g)', Icons.egg),
+
+              const SizedBox(height: 16),
+              buildTextField(targetFat, 'Hedef Yağ (g)', Icons.water_drop),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF13EC5B),
+                    foregroundColor: const Color(0xFF102216),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () async {
+                    final goal = NutritionGoal()
+                      ..hedefKalori = double.tryParse(targetCalories.text) ?? 0
+                      ..hedefKarbonhidrat =
+                          double.tryParse(targetCarbohydrate.text) ?? 0
+                      ..hedefProtein = double.tryParse(targetProtein.text) ?? 0
+                      ..hedefYag = double.tryParse(targetFat.text) ?? 0
+                      ..tarih = DateTime.now()
+                      ..sonGuncellemeTarihi = DateTime.now();
+
+                    if (currentGoal != null) {
+                      goal.id = currentGoal.id;
+                    }
+
+                    await ref
+                        .read(nutritionNotifierProvider.notifier)
+                        .updateGoal(goal);
+
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Hedefler güncellendi'),
+                          backgroundColor: AppColors.primary,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text(
+                    'Hedefleri Kaydet',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
       ),
     );
   }
