@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 Widget buildTextField(
   TextEditingController controller,
   String label,
-  IconData icon,
-) {
+  IconData icon, {
+  bool keyboardInfo = true,
+}) {
   return TextField(
     controller: controller,
-    keyboardType: TextInputType.text,
+    keyboardType: keyboardInfo
+        ? TextInputType.numberWithOptions(decimal: true)
+        : TextInputType.text,
     style: const TextStyle(color: Colors.white),
     decoration: InputDecoration(
       labelText: label,

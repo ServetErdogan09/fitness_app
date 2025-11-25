@@ -640,6 +640,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                 foodNameController,
                 'Yiyecek Adı',
                 Icons.restaurant,
+                keyboardInfo: false,
               ),
               const SizedBox(height: 16),
               buildTextField(gramsController, 'Miktar (gram)', Icons.scale),
