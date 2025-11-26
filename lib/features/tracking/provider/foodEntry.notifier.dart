@@ -38,6 +38,11 @@ class FoodEntryNoifier extends StateNotifier<FoodEntryState> {
     await db.deleteFoodEntry(id);
     await getFoodEntry(mealId);
   }
+
+  Future<void> updateFoodEntry(FoodEntry food, int mealId) async {
+    await db.updateFoodEntry(food);
+    await getFoodEntry(mealId);
+  }
 }
 
 final foodEntryProvider =

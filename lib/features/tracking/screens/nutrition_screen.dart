@@ -81,7 +81,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                   const SizedBox(height: 24),
 
                   // Öğün Listesi
-                  _buildMealsList(state),
+                  _buildMealsList(state, isToday),
                   const SizedBox(height: 80),
                 ],
               ),
@@ -110,7 +110,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.darkContainer.withOpacity(0.05),
+        color: AppColors.cardDark.withOpacity(0.2),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
@@ -244,7 +244,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.darkContainer.withOpacity(0.05),
+        color: AppColors.cardDark.withOpacity(0.2),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
@@ -389,56 +389,49 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.darkContainer.withOpacity(0.5),
+        color: AppColors.cardDark.withOpacity(0.2),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 16, 166, 66).withOpacity(0.2),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                name,
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          RichText(
+            text: TextSpan(
+              text: value.toStringAsFixed(0),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
               children: [
-                Icon(icon, color: color, size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  name,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                TextSpan(
+                  text: ' $unit',
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 10,
+                    fontWeight: FontWeight.normal,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            RichText(
-              text: TextSpan(
-                text: value.toStringAsFixed(0),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                children: [
-                  TextSpan(
-                    text: ' $unit',
-                    style: const TextStyle(
-                      color: Colors.white54,
-                      fontSize: 10,
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildMealsList(NutritionState state) {
+  Widget _buildMealsList(NutritionState state, bool isToday) {
     final mealTypes = [
       'Kahvaltı',
       'Öğle Yemeği',
@@ -453,18 +446,25 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
             .firstOrNull;
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: _buildMealCard(mealType, meal),
+          child: _buildMealCard(mealType, meal, isToday),
         );
       }).toList(),
     );
   }
 
-  Widget _buildMealCard(String mealType, Meal? meal) {
+  Widget _buildMealCard(String mealType, Meal? meal, bool isToday) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.darkContainer.withOpacity(0.05),
+        color: isDark
+            ? AppColors.cardDark.withOpacity(0.2)
+            : AppColors.cardLight, // kart rengi
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(
+          color: isDark ? AppColors.white10 : Colors.grey[300]!,
+        ),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -475,13 +475,20 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
             meal != null
                 ? '$mealType - ${meal.toplamKalori.toStringAsFixed(0)} kcal'
                 : mealType,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
               fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: isDark
+                  ? AppColors.textDark
+                  : AppColors.textLight, // başlık rengi
             ),
           ),
-          iconColor: Colors.white54,
-          collapsedIconColor: Colors.white54,
+          iconColor: isDark
+              ? AppColors.textSecondaryDark
+              : AppColors.textSecondaryLight,
+          collapsedIconColor: isDark
+              ? AppColors.textSecondaryDark
+              : AppColors.textSecondaryLight,
           children: [
             if (meal != null)
               Consumer(
@@ -499,15 +506,33 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                       padding: const EdgeInsets.all(16.0),
                       child: Text(
                         'Henüz yemek eklenmemiş',
-                        style: TextStyle(color: Colors.white54, fontSize: 14),
+                        style: TextStyle(
+                          color: isDark
+                              ? AppColors.textSecondaryDark
+                              : AppColors.textSecondaryLight,
+                          fontSize: 14,
+                        ),
                       ),
                     );
                   }
 
                   return Column(
-                    children: foodEntries
-                        .map((food) => _buildFoodItem(food))
-                        .toList(),
+                    children: foodEntries.map((food) {
+                      int index = foodEntries.indexOf(food);
+                      return Column(
+                        children: [
+                          _buildFoodItem(food, meal, isToday),
+                          if (index != foodEntries.length - 1)
+                            Divider(
+                              color: isDark
+                                  ? AppColors.white10
+                                  : Colors.grey[300],
+                              thickness: 1,
+                              height: 1,
+                            ),
+                        ],
+                      );
+                    }).toList(),
                   );
                 },
               )
@@ -516,27 +541,35 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
                   'Henüz yemek eklenmemiş',
-                  style: TextStyle(color: Colors.white54, fontSize: 14),
+                  style: TextStyle(
+                    color: isDark
+                        ? AppColors.textSecondaryDark
+                        : AppColors.textSecondaryLight,
+                    fontSize: 14,
+                  ),
                 ),
               ),
-            TextButton.icon(
-              onPressed: () => _showAddFoodBottomSheet(context, mealType),
-              icon: const Icon(
-                Icons.add_circle_outline,
-                color: AppColors.primary,
+            const SizedBox(height: 8),
+            if (isToday) ...{
+              TextButton.icon(
+                onPressed: () => _showAddFoodBottomSheet(context, mealType),
+                icon: Icon(
+                  Icons.add_circle_outline,
+                  color: AppColors.primary, // ana renk
+                ),
+                label: Text(
+                  'Yiyecek Ekle',
+                  style: TextStyle(color: AppColors.primary),
+                ),
               ),
-              label: const Text(
-                'Yiyecek Ekle',
-                style: TextStyle(color: AppColors.primary),
-              ),
-            ),
+            },
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFoodItem(FoodEntry food) {
+  Widget _buildFoodItem(FoodEntry food, Meal meal, bool isToday) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -548,6 +581,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                 Text(
                   food.yiyecekAdi,
                   style: const TextStyle(
+                    fontSize: 16,
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
                   ),
@@ -564,10 +598,35 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
           Text(
             '${food.kalori.toStringAsFixed(0)} kcal',
             style: const TextStyle(
-              color: Colors.white70,
+              fontSize: 15,
+              color: Colors.white,
               fontWeight: FontWeight.w500,
             ),
           ),
+          const SizedBox(width: 12),
+
+          if (isToday) ...{
+            IconButton(
+              onPressed: () {
+                _showEditFoodBottomSheet(
+                  BuildContext,
+                  meal.ogunTuru,
+                  food,
+                  meal.id,
+                );
+              },
+              icon: const Icon(Icons.edit, color: Colors.cyanAccent),
+            ),
+
+            IconButton(
+              onPressed: () {
+                ref
+                    .read(foodEntryProvider(meal.id).notifier)
+                    .deleteFoodEntry(food.id, meal.id);
+              },
+              icon: const Icon(Icons.delete, color: Colors.redAccent),
+            ),
+          },
         ],
       ),
     );
@@ -673,7 +732,6 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                     ),
                   ),
                   onPressed: () async {
-                    // Validation
                     if (foodNameController.text.trim().isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -741,6 +799,203 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                   },
                   child: const Text(
                     'Kaydet',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showEditFoodBottomSheet(
+    BuildContext,
+    String maleType,
+    FoodEntry foodEntry,
+    int mealId,
+  ) {
+    final foodNameController = TextEditingController(
+      text: foodEntry.yiyecekAdi.toString(),
+    );
+
+    final gramsController = TextEditingController(
+      text: foodEntry.porsiyonMiktari.toString(),
+    );
+    final caloriesController = TextEditingController(
+      text: foodEntry.kalori.toString(),
+    );
+    final carbsController = TextEditingController(
+      text: foodEntry.karbonhidrat.toString(),
+    );
+    final fatController = TextEditingController(text: foodEntry.yag.toString());
+    final proteinController = TextEditingController(
+      text: foodEntry.protein.toString(),
+    );
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF102216),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 16,
+          right: 16,
+          top: 16,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Yiyecek Düzenle',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        maleType,
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white70),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Yiyecek bilgilerini girin',
+                style: TextStyle(color: Colors.white54, fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+              buildTextField(
+                foodNameController,
+                'Yiyecek Adı',
+                Icons.restaurant,
+                keyboardInfo: false,
+              ),
+              const SizedBox(height: 16),
+              buildTextField(gramsController, 'Miktar (gram)', Icons.scale),
+              const SizedBox(height: 16),
+              buildTextField(
+                caloriesController,
+                'Kalori (kcal)',
+                Icons.local_fire_department,
+              ),
+              const SizedBox(height: 16),
+              buildTextField(
+                carbsController,
+                'Karbonhidrat (g)',
+                Icons.bakery_dining,
+              ),
+              const SizedBox(height: 16),
+              buildTextField(fatController, 'Yağ (g)', Icons.water_drop),
+              const SizedBox(height: 16),
+              buildTextField(proteinController, 'Protein (g)', Icons.egg),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF13EC5B),
+                    foregroundColor: const Color(0xFF102216),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () async {
+                    if (foodNameController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Lütfen yiyecek adını girin'),
+                          backgroundColor: Colors.red,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    final grams = double.tryParse(gramsController.text) ?? 0;
+                    final calories =
+                        double.tryParse(caloriesController.text) ?? 0;
+                    final carbs = double.tryParse(carbsController.text) ?? 0;
+                    final fat = double.tryParse(fatController.text) ?? 0;
+                    final protein =
+                        double.tryParse(proteinController.text) ?? 0;
+
+                    if (grams <= 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text(
+                            'Lütfen geçerli bir miktar girin',
+                          ),
+                          backgroundColor: Colors.red,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    foodEntry
+                      ..yiyecekAdi = foodNameController.text.trim()
+                      ..porsiyonMiktari = grams
+                      ..porsiyonBirim = 'gr'
+                      ..kalori = calories
+                      ..karbonhidrat = carbs
+                      ..yag = fat
+                      ..protein = protein;
+
+                    await ref
+                        .read(foodEntryProvider(mealId).notifier)
+                        .updateFoodEntry(foodEntry, mealId);
+
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '${foodNameController.text} güncelendi',
+                          ),
+                          backgroundColor: AppColors.primary,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text(
+                    'Güncele',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),

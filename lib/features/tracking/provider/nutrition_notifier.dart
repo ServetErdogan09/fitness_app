@@ -1,5 +1,7 @@
 import 'package:fitness_app/core/providers/database_provider.dart';
+import 'package:fitness_app/core/providers/database_provider.dart' as core;
 import 'package:fitness_app/core/services/local_databse_service.dart';
+import 'package:fitness_app/features/tracking/provider/foodEntry.notifier.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/nutrition.dart';
@@ -52,9 +54,11 @@ class NutritionState {
 
 class NutritionNotifier extends StateNotifier<NutritionState> {
   final DatabaseService db;
+  final Ref ref;
+
   final int _userId = 1;
 
-  NutritionNotifier(this.db) : super(NutritionState()) {
+  NutritionNotifier(this.db, this.ref) : super(NutritionState()) {
     _loadInitialData();
   }
 
@@ -144,13 +148,10 @@ class NutritionNotifier extends StateNotifier<NutritionState> {
     existingMeal.toplamYag += newFood.yag;
 
     await db.saveMeal(existingMeal);
+    ref.invalidate(foodEntryProvider(existingMeal.id));
 
     await _loadInitialData();
-  }
-
-  Future<void> deleteFoodEntry(int foodEntryId, Meal parentMeal) async {
-    await db.deleteFoodEntry(foodEntryId);
-    await _loadInitialData();
+    // await db.getFoodEntriesByMealId(existingMeal.id);
   }
 
   Future<void> deleteMeal(int mealId) async {
@@ -161,6 +162,6 @@ class NutritionNotifier extends StateNotifier<NutritionState> {
 
 final nutritionNotifierProvider =
     StateNotifierProvider<NutritionNotifier, NutritionState>((ref) {
-      final dbService = ref.watch(databaseServiceProvider);
-      return NutritionNotifier(dbService);
+      final dbService = ref.watch(core.databaseServiceProvider);
+      return NutritionNotifier(dbService, ref);
     });

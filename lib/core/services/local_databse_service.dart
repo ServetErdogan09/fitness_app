@@ -131,4 +131,10 @@ class DatabaseService {
       await isar.nutritionGoals.delete(id);
     });
   }
+
+  Future<void> updateFoodEntry(FoodEntry food) async {
+    await isar.writeTxn(() async {
+      await isar.foodEntrys.put(food);
+    });
+  }
 }
