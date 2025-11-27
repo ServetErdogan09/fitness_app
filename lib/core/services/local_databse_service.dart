@@ -1,5 +1,6 @@
 import 'package:fitness_app/models/body_measurement.dart';
 import 'package:fitness_app/models/nutrition.dart';
+import 'package:fitness_app/models/workout_session.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -111,6 +112,30 @@ class DatabaseService {
     return await isar.nutritionGoals
         .filter()
         .kullaniciIdEqualTo(userId)
+        .sortByTarihDesc()
+        .findFirst();
+  }
+
+  Future<NutritionGoal?> getNutritionGoalBefore(
+    int userId,
+    DateTime date,
+  ) async {
+    final endOfDay = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      23,
+      59,
+      59,
+      999,
+      999,
+    );
+
+    return await isar.nutritionGoals
+        .filter()
+        .kullaniciIdEqualTo(userId)
+        .tarihLessThan(endOfDay, include: true)
+        .sortByTarihDesc()
         .findFirst();
   }
 
@@ -135,6 +160,51 @@ class DatabaseService {
   Future<void> updateFoodEntry(FoodEntry food) async {
     await isar.writeTxn(() async {
       await isar.foodEntrys.put(food);
+    });
+  }
+
+  Future<NutritionGoal?> getNutritionGoalForDay(
+    int UserId,
+    DateTime date,
+  ) async {
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      23,
+      59,
+      59,
+      999,
+      999,
+    );
+
+    final goals = await isar.nutritionGoals
+        .filter()
+        .kullaniciIdEqualTo(UserId)
+        .tarihBetween(startOfDay, endOfDay)
+        .findAll();
+
+    return goals.isNotEmpty ? goals.first : null;
+  }
+
+  // Antreman işlemleri burada
+
+  // kullanıcı ilk önce hangi antrmanı ve antreman planını seçtiyse onu kaydet
+  Future<void> updateAndAddWorkoutPlan(WorkoutPlan plan) async {
+    await isar.writeTxn(() async {
+      await isar.workoutPlans.put(plan);
+    });
+  }
+
+  // kullanıcnın planladığı antremanları çek
+  Future<List<WorkoutPlan>> getWorkoutPlans(int userId) async {
+    return await isar.workoutPlans.filter().userIdEqualTo(userId).findAll();
+  }
+
+  Future<void> deleteWorkoutPlan(int id) async {
+    await isar.writeTxn(() async {
+      await isar.workoutPlans.delete(id);
     });
   }
 }

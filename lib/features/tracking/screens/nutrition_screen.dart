@@ -77,7 +77,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                   const SizedBox(height: 24),
 
                   // Hedef Belirleme
-                  _buildGoalSection(goal),
+                  _buildGoalSection(goal, isToday, state.selectedDate),
                   const SizedBox(height: 24),
 
                   // Öğün Listesi
@@ -240,7 +240,11 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
     );
   }
 
-  Widget _buildGoalSection(NutritionGoal? goal) {
+  Widget _buildGoalSection(
+    NutritionGoal? goal,
+    bool isToday,
+    DateTime selectedDate,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -261,21 +265,24 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              TextButton.icon(
-                onPressed: () => _showGoalModal(context, goal),
-                icon: const Text(
-                  'Düzenle',
-                  style: TextStyle(
+              if (isToday) ...{
+                TextButton.icon(
+                  onPressed: () =>
+                      _showGoalModal(context, goal, isToday, selectedDate),
+                  icon: const Text(
+                    'Düzenle',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  label: const Icon(
+                    Icons.edit_outlined,
                     color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
+                    size: 16,
                   ),
                 ),
-                label: const Icon(
-                  Icons.edit_outlined,
-                  color: AppColors.primary,
-                  size: 16,
-                ),
-              ),
+              },
             ],
           ),
           const SizedBox(height: 16),
@@ -1008,7 +1015,12 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
     );
   }
 
-  void _showGoalModal(BuildContext context, NutritionGoal? currentGoal) {
+  void _showGoalModal(
+    BuildContext context,
+    NutritionGoal? currentGoal,
+    bool isToday,
+    DateTime selectedDate,
+  ) {
     final targetCalories = TextEditingController(
       text: currentGoal?.hedefKalori.toString() ?? '',
     );
@@ -1100,12 +1112,8 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                           double.tryParse(targetCarbohydrate.text) ?? 0
                       ..hedefProtein = double.tryParse(targetProtein.text) ?? 0
                       ..hedefYag = double.tryParse(targetFat.text) ?? 0
-                      ..tarih = DateTime.now()
+                      ..tarih = selectedDate
                       ..sonGuncellemeTarihi = DateTime.now();
-
-                    if (currentGoal != null) {
-                      goal.id = currentGoal.id;
-                    }
 
                     await ref
                         .read(nutritionNotifierProvider.notifier)

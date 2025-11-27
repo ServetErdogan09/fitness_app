@@ -1,0 +1,3 @@
+class WorkoutState {
+  // final
+}

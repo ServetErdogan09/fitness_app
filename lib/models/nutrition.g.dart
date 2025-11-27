@@ -2332,6 +2332,11 @@ const NutritionGoalSchema = CollectionSchema(
       id: 5,
       name: r'sonGuncellemeTarihi',
       type: IsarType.dateTime,
+    ),
+    r'tarih': PropertySchema(
+      id: 6,
+      name: r'tarih',
+      type: IsarType.dateTime,
     )
   },
   estimateSize: _nutritionGoalEstimateSize,
@@ -2369,6 +2374,7 @@ void _nutritionGoalSerialize(
   writer.writeDouble(offsets[3], object.hedefYag);
   writer.writeLong(offsets[4], object.kullaniciId);
   writer.writeDateTime(offsets[5], object.sonGuncellemeTarihi);
+  writer.writeDateTime(offsets[6], object.tarih);
 }
 
 NutritionGoal _nutritionGoalDeserialize(
@@ -2385,6 +2391,7 @@ NutritionGoal _nutritionGoalDeserialize(
   object.id = id;
   object.kullaniciId = reader.readLong(offsets[4]);
   object.sonGuncellemeTarihi = reader.readDateTime(offsets[5]);
+  object.tarih = reader.readDateTime(offsets[6]);
   return object;
 }
 
@@ -2406,6 +2413,8 @@ P _nutritionGoalDeserializeProp<P>(
     case 4:
       return (reader.readLong(offset)) as P;
     case 5:
+      return (reader.readDateTime(offset)) as P;
+    case 6:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2937,6 +2946,62 @@ extension NutritionGoalQueryFilter
       ));
     });
   }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
+      tarihEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'tarih',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
+      tarihGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'tarih',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
+      tarihLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'tarih',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
+      tarihBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'tarih',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
 }
 
 extension NutritionGoalQueryObject
@@ -3025,6 +3090,18 @@ extension NutritionGoalQuerySortBy
       sortBySonGuncellemeTarihiDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sonGuncellemeTarihi', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterSortBy> sortByTarih() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tarih', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterSortBy> sortByTarihDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tarih', Sort.desc);
     });
   }
 }
@@ -3123,6 +3200,18 @@ extension NutritionGoalQuerySortThenBy
       return query.addSortBy(r'sonGuncellemeTarihi', Sort.desc);
     });
   }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterSortBy> thenByTarih() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tarih', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterSortBy> thenByTarihDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tarih', Sort.desc);
+    });
+  }
 }
 
 extension NutritionGoalQueryWhereDistinct
@@ -3165,6 +3254,12 @@ extension NutritionGoalQueryWhereDistinct
       distinctBySonGuncellemeTarihi() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'sonGuncellemeTarihi');
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QDistinct> distinctByTarih() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'tarih');
     });
   }
 }
@@ -3212,6 +3307,12 @@ extension NutritionGoalQueryProperty
       sonGuncellemeTarihiProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'sonGuncellemeTarihi');
+    });
+  }
+
+  QueryBuilder<NutritionGoal, DateTime, QQueryOperations> tarihProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'tarih');
     });
   }
 }

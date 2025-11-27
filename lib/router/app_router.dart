@@ -1,4 +1,3 @@
-import 'package:fitness_app/features/tracking/screens/add_food_screen.dart';
 import 'package:fitness_app/features/tracking/screens/nutrition_screen.dart';
 import 'package:fitness_app/features/tracking/screens/body_measurements_screen.dart';
 import 'package:flutter/material.dart';

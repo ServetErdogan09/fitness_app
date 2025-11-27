@@ -27,6 +27,7 @@ class FoodEntryNoifier extends StateNotifier<FoodEntryState> {
 
     try {
       final FoodEntryList = await db.getFoodEntriesByMealId(mealId);
+      if (!mounted) return;
       state = state.copyWith(foodEntry: FoodEntryList, isLoading: false);
     } catch (e) {
       print('Local DB\'den yiyecekler çekilirken hata oluştu: $e');
@@ -36,11 +37,13 @@ class FoodEntryNoifier extends StateNotifier<FoodEntryState> {
 
   Future<void> deleteFoodEntry(int id, int mealId) async {
     await db.deleteFoodEntry(id);
+    if (!mounted) return;
     await getFoodEntry(mealId);
   }
 
   Future<void> updateFoodEntry(FoodEntry food, int mealId) async {
     await db.updateFoodEntry(food);
+    if (!mounted) return;
     await getFoodEntry(mealId);
   }
 }

@@ -83,6 +83,8 @@ class _MeasurementEditScreenState extends ConsumerState<MeasurementEditScreen> {
       ..pazuCevresi = double.tryParse(_armController.text)
       ..tarih = widget.measurement.tarih;
 
+    final messenger = ScaffoldMessenger.of(context);
+
     ref
         .read(bodyMeasurementProvider.notifier)
         .updateMesaurment(updatedMeasurement);
@@ -91,7 +93,7 @@ class _MeasurementEditScreenState extends ConsumerState<MeasurementEditScreen> {
 
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: const Text('Ölçüm güncellendi'),
             backgroundColor: AppColors.primary,

@@ -66,7 +66,18 @@ class NutritionNotifier extends StateNotifier<NutritionState> {
     state = state.copyWith(isLoading: true);
     try {
       final todayMeals = await db.getMealsForDay(_userId, state.selectedDate);
-      final currentGoal = await db.getNutritionGoal(_userId);
+
+      //  Önce seçili günün hedefini kontrol et
+      NutritionGoal? currentGoal = await db.getNutritionGoalForDay(
+        _userId,
+        state.selectedDate,
+      );
+
+      //  Eğer o gün için hedef yoksa, o günden ÖNCEKİ en son hedefi getir
+      currentGoal ??= await db.getNutritionGoalBefore(
+        _userId,
+        state.selectedDate,
+      );
 
       final calculatedTotalCalories = todayMeals.fold(
         0.0,
@@ -111,7 +122,25 @@ class NutritionNotifier extends StateNotifier<NutritionState> {
   Future<void> updateGoal(NutritionGoal goal) async {
     goal.kullaniciId = _userId;
     goal.sonGuncellemeTarihi = DateTime.now();
+
+    print('UpdateGoal Çağrıldı. Hedef Tarih: ${goal.tarih}');
+
+    // aynı gün içindeki hedef bull
+    final existingGoal = await db.getNutritionGoalForDay(_userId, goal.tarih);
+    print(
+      'Bulunan Mevcut Hedef (existingGoal): ${existingGoal?.id} - Tarih: ${existingGoal?.tarih}',
+    );
+
+    if (existingGoal != null) {
+      print('Mevcut hedef güncelleniyor. ID: ${existingGoal.id}');
+      goal.id = existingGoal.id;
+    } else {
+      print('Yeni hedef oluşturuluyor.');
+    }
+
     await db.saveNutritionGoal(goal);
+    print('Hedef kaydedildi. Son ID: ${goal.id}');
+
     await _loadInitialData();
   }
 
