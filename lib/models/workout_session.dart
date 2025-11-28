@@ -2,13 +2,20 @@ import 'package:isar/isar.dart';
 
 part 'workout_session.g.dart';
 
-@embedded
+@collection
 class ExerciseLog {
+  Id id = Isar.autoIncrement;
+
+  late int sessionId;
   late int exerciseId;
   late String exerciseName;
-  late int setCount;
-  late int repCount;
+  late int setNumber;
   late double weight;
+  late int reps;
+  String? notes;
+  DateTime? completedAt;
+
+  int? orderIndex;
 }
 
 @embedded
@@ -19,18 +26,25 @@ class WorkoutDay {
 @collection
 class WorkoutSession {
   Id id = Isar.autoIncrement;
+  String? sessionName;
   late int userId;
   late DateTime startTime;
   DateTime? endTime;
   double? caloriesBurned;
+  int? workoutPlanId;
+  int? duration;
 }
 
 @collection
 class WorkoutPlan {
   Id id = Isar.autoIncrement;
-
+  String? description;
+  bool? isActive;
   late int userId;
   late String planName;
+  String? goal;
+  String? difficulty; // "Başlangıç", "Orta", "İleri"
+  int? estimatedDuration; // dakika cinsinden
   late List<WorkoutDay> days;
   late DateTime creationDate;
 }
@@ -42,5 +56,7 @@ class PlanExercise {
   late String exerciseName;
   late String setCount;
   late String repCount;
-  int? restTime;
+  int? restTime; // saniye
+  double? targetWeight; // kg
+  String? notes; // talimatlar
 }

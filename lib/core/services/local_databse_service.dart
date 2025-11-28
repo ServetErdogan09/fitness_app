@@ -8,6 +8,12 @@ class DatabaseService {
   late Isar isar;
 
   Future<void> initialize() async {
+    // Check if Isar instance already exists
+    if (Isar.instanceNames.isNotEmpty) {
+      isar = Isar.getInstance()!;
+      return;
+    }
+
     final dir = await getApplicationSupportDirectory();
 
     isar = await Isar.open([
@@ -16,6 +22,10 @@ class DatabaseService {
       MealSchema,
       FoodEntrySchema,
       NutritionGoalSchema,
+      WorkoutSessionSchema,
+      WorkoutPlanSchema,
+      PlanExerciseSchema,
+      ExerciseLogSchema,
     ], directory: dir.path);
   }
 
@@ -188,10 +198,10 @@ class DatabaseService {
     return goals.isNotEmpty ? goals.first : null;
   }
 
-  // Antreman işlemleri burada
+  //------------------ Antreman işlemleri burada----------------
 
   // kullanıcı ilk önce hangi antrmanı ve antreman planını seçtiyse onu kaydet
-  Future<void> updateAndAddWorkoutPlan(WorkoutPlan plan) async {
+  Future<void> saveWorkoutPlan(WorkoutPlan plan) async {
     await isar.writeTxn(() async {
       await isar.workoutPlans.put(plan);
     });
@@ -204,7 +214,78 @@ class DatabaseService {
 
   Future<void> deleteWorkoutPlan(int id) async {
     await isar.writeTxn(() async {
+      // eğer plan siliniyorsa ona ait egzersizlerde silinsin
+      await isar.planExercises.filter().programIdEqualTo(id).deleteAll();
       await isar.workoutPlans.delete(id);
     });
+  }
+
+  // kullanıcı plan exercise ekleme
+  Future<void> addPlanExercise(PlanExercise exercise) async {
+    await isar.writeTxn(() async {
+      await isar.planExercises.put(exercise);
+    });
+  }
+
+  Future<List<PlanExercise>> getPlanExercises(int programId) async {
+    return await isar.planExercises
+        .filter()
+        .programIdEqualTo(programId)
+        .findAll();
+  }
+
+  Future<void> deletePlanExercise(int id) async {
+    await isar.writeTxn(() async {
+      await isar.planExercises.delete(id);
+    });
+  }
+
+  // kullanıcı antreman seansını başlatma
+  Future<int> startWorkoutSession(WorkoutSession session) async {
+    return await isar.writeTxn<int>(() async {
+      await isar.workoutSessions.put(session);
+      return session.id;
+    });
+  }
+
+  // kullanıcı antreman seansını bitirme
+  Future<void> endWorkoutSession(WorkoutSession session) async {
+    await isar.writeTxn(() async {
+      await isar.workoutSessions.put(session);
+    });
+  }
+
+  // kullanıcıya ait tüm antreman seanslarını çekme
+  Future<List<WorkoutSession>> getWorkoutSessions(int userId) async {
+    return await isar.workoutSessions
+        .filter()
+        .userIdEqualTo(userId)
+        .sortByStartTimeDesc()
+        .findAll();
+  }
+
+  Future<void> deleteWorkoutSession(int id) async {
+    await isar.writeTxn(() async {
+      await isar.workoutSessions.delete(id);
+    });
+  }
+
+  Future<void> deleteExerciseLog(int id) async {
+    await isar.writeTxn(() async {
+      await isar.exerciseLogs.delete(id);
+    });
+  }
+
+  Future<void> saveExerciseLog(ExerciseLog log) async {
+    await isar.writeTxn(() async {
+      await isar.exerciseLogs.put(log);
+    });
+  }
+
+  Future<List<ExerciseLog>> getExerciseLogs(int sessionId) async {
+    return await isar.exerciseLogs
+        .filter()
+        .sessionIdEqualTo(sessionId)
+        .findAll();
   }
 }

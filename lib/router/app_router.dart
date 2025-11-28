@@ -1,18 +1,25 @@
+import 'package:fitness_app/features/tracking/screens/active_workout_screen.dart';
+import 'package:fitness_app/features/tracking/screens/training_screen.dart';
 import 'package:fitness_app/features/tracking/screens/nutrition_screen.dart';
 import 'package:fitness_app/features/tracking/screens/body_measurements_screen.dart';
+import 'package:fitness_app/models/workout_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 class AppRoutes {
   static const measurements = '/measurements';
   static const nutrition = '/nutrition';
   static const training = '/training';
+  static const activeWorkout = '/active-workout';
   static const addScreen = '/addfood/:mealId';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.measurements,
     routes: [
       ShellRoute(
@@ -35,18 +42,19 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: TrainingScreen()),
           ),
-
-          /*
-          GoRoute(
-            path: '${AppRoutes.addScreen}/:mealId',
-            pageBuilder: (context, state) {
-              final mealId =
-                  int.tryParse(state.pathParameters['mealId'] ?? '0') ?? 0;
-              return NoTransitionPage(child: AddFoodScreen(mealId: mealId));
-            },
-          ),
-          */
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.activeWorkout,
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
+          final plan = state.extra as WorkoutPlan?;
+          if (plan == null) {
+            // Redirect to training if no plan provided
+            return const MaterialPage(child: TrainingScreen());
+          }
+          return MaterialPage(child: ActiveWorkoutScreen(plan: plan));
+        },
       ),
     ],
   );
@@ -104,20 +112,6 @@ class ScaffoldWithNavBar extends StatelessWidget {
             label: 'Antrenman',
           ),
         ],
-      ),
-    );
-  }
-}
-
-class TrainingScreen extends StatelessWidget {
-  const TrainingScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Antrenman Sayfası',
-        style: TextStyle(color: Colors.white, fontSize: 24),
       ),
     );
   }
