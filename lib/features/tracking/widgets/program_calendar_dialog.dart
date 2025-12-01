@@ -191,13 +191,19 @@ class _ProgramCalendarDialogState extends State<ProgramCalendarDialog> {
         final isCompleted = _isCompleted(date);
         final isToday = DateUtils.isSameDay(date, DateTime.now());
 
+        print(
+          isPlannedDay
+              ? 'Planned Day: $date ($weekdayName)'
+              : 'Not a Planned Day: $date ($weekdayName)',
+        );
+
         Color bgColor;
         if (isCompleted) {
           bgColor = const Color(0xFF13ec49).withOpacity(0.2);
         } else if (isPlannedDay) {
           bgColor = Colors.red.withOpacity(0.2);
         } else {
-          bgColor = Colors.grey.withOpacity(0.1);
+          bgColor = const Color.fromARGB(255, 91, 87, 87).withOpacity(0.1);
         }
 
         return Container(
