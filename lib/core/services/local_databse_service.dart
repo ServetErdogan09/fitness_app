@@ -224,8 +224,27 @@ class DatabaseService {
 
   Future<void> deleteWorkoutPlan(int id) async {
     await isar.writeTxn(() async {
-      // eğer plan siliniyorsa ona ait egzersizlerde silinsin
+      //  Bu plana ait tüm WorkoutSession'ları bul
+      final sessions = await isar.workoutSessions
+          .filter()
+          .workoutPlanIdEqualTo(id)
+          .findAll();
+
+      //  Her session'a ait ExerciseLog'ları sil
+      for (var session in sessions) {
+        await isar.exerciseLogs
+            .filter()
+            .sessionIdEqualTo(session.id)
+            .deleteAll();
+      }
+
+      //  Bu plana ait tüm WorkoutSession'ları sil
+      await isar.workoutSessions.filter().workoutPlanIdEqualTo(id).deleteAll();
+
+      //  Bu plana ait tüm PlanExercise'ları sil
       await isar.planExercises.filter().programIdEqualTo(id).deleteAll();
+
+      //  Son olarak WorkoutPlan'ı sil
       await isar.workoutPlans.delete(id);
     });
   }
