@@ -32,11 +32,12 @@ class BodyMeasurementNotifier extends StateNotifier<BodyMeasurementState> {
 
   BodyMeasurementNotifier(this.dbService) : super(BodyMeasurementState()) {
     loadMeasurements();
+    loadGoal(1); // Load default user's goal
   }
 
   Future<void> loadMeasurements() async {
     state = state.copyWith(isLoading: true);
-    final measurements = await dbService.getAllBodyMeasurements();
+    final measurements = await dbService.getAllBodyMeasurements(1);
     measurements.sort((a, b) => (b.tarih).compareTo(a.tarih));
     state = state.copyWith(measurements: measurements, isLoading: false);
   }

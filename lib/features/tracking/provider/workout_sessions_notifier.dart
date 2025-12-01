@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:fitness_app/core/providers/database_provider.dart';
+import 'package:fitness_app/core/providers/points_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:fitness_app/core/services/local_databse_service.dart';
 import 'package:fitness_app/models/workout_session.dart';
+import 'package:fitness_app/models/user_points.dart';
 
 class WorkoutState {
   final List<WorkoutPlan> activePlans;
@@ -144,8 +147,8 @@ class WorkoutSessionsNotifier extends StateNotifier<WorkoutState> {
     _startTimer(); // zamanlayıcıyı başlat
   }
 
-  Future<void> finishWorkout() async {
-    if (state.currentSession == null) return;
+  Future<PointCalculation?> finishWorkout() async {
+    if (state.currentSession == null) return null;
 
     _stopTimer();
 
@@ -154,6 +157,49 @@ class WorkoutSessionsNotifier extends StateNotifier<WorkoutState> {
       ..duration = state.elapsedDuration.inMinutes;
 
     await db.endWorkoutSession(finishedSession);
+
+    PointCalculation? calculationResult;
+
+    try {
+      final pointsService = ref.read(pointsServiceProvider);
+
+      WorkoutPlan? plan;
+      if (finishedSession.workoutPlanId != null) {
+        plan = await db.getWorkoutPlan(finishedSession.workoutPlanId!);
+      }
+
+      // Puanları hesapla
+      final calculation = await pointsService.calculateWorkoutPoints(
+        session: finishedSession,
+        logs: state.currentLogs,
+        plan: plan,
+      );
+
+      // Kullanıcı puanlarını güncelle
+      await pointsService.updateUserPoints(_userId, calculation);
+
+      // Puan geçmişine kaydet
+      final history = PointsHistory()
+        ..userId = _userId
+        ..sessionId = finishedSession.id
+        ..pointsEarned = calculation.totalPoints
+        ..earnedAt = DateTime.now()
+        ..reason = plan != null ? 'Planned Workout' : 'Free Workout'
+        ..details = jsonEncode(calculation.toJson());
+
+      await db.savePointsHistory(history);
+
+      print('✅ Puan kazanıldı: ${calculation.totalPoints}');
+      print('   - Taban: ${calculation.basePoints}');
+      print('   - Set/Reps: +${calculation.setRepsBonus}');
+      print('   - Ağırlık: +${calculation.weightBonus}');
+      print('   - Tutarlılık: +${calculation.consistencyBonus}');
+
+      calculationResult = calculation;
+    } catch (e) {
+      // Puan hesaplama hatası antrenmanı etkilemez
+      print('⚠️ Puan hesaplama hatası: $e');
+    }
 
     state = state.copyWith(
       currentSession: null,
@@ -164,6 +210,8 @@ class WorkoutSessionsNotifier extends StateNotifier<WorkoutState> {
     );
 
     await _loadHistory();
+
+    return calculationResult;
   }
 
   Future<void> cancelWorkout() async {
@@ -228,10 +276,10 @@ class WorkoutSessionsNotifier extends StateNotifier<WorkoutState> {
   }
 
   Future<void> deleteWorkoutPlan(int planId) async {
-    await db.deleteWorkoutPlan(planId);
     final updatedPlans = state.activePlans
         .where((plan) => plan.id != planId)
         .toList();
+
     state = state.copyWith(activePlans: updatedPlans);
   }
 
@@ -376,6 +424,10 @@ class WorkoutSessionsNotifier extends StateNotifier<WorkoutState> {
     // 2. tüm bu sessionlar için logları getir
     final sessionIds = planSessions.map((s) => s.id).toList();
     return await db.getExerciseLogsForSessions(sessionIds);
+  }
+
+  Future<List<PlanExercise>> getPlanExercises(int planId) async {
+    return await db.getPlanExercises(planId);
   }
 }
 

@@ -1,6 +1,7 @@
 import 'package:fitness_app/models/body_measurement.dart';
 import 'package:fitness_app/models/nutrition.dart';
 import 'package:fitness_app/models/workout_session.dart';
+import 'package:fitness_app/models/user_points.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -26,6 +27,8 @@ class DatabaseService {
       WorkoutPlanSchema,
       PlanExerciseSchema,
       ExerciseLogSchema,
+      UserPointsSchema, // YENİ: Puan bilgileri
+      PointsHistorySchema, // YENİ: Puan geçmişi
     ], directory: dir.path);
   }
 
@@ -37,8 +40,12 @@ class DatabaseService {
   }
 
   // tarihe göre buttun ölçümleri çek
-  Future<List<BodyMeasurement>> getAllBodyMeasurements() async {
-    return await isar.bodyMeasurements.where().sortByTarihDesc().findAll();
+  Future<List<BodyMeasurement>> getAllBodyMeasurements(int userId) async {
+    return await isar.bodyMeasurements
+        .filter()
+        .kullaniciIdEqualTo(userId)
+        .sortByTarihDesc()
+        .findAll();
   }
 
   // Ölçüm silme
@@ -325,5 +332,85 @@ class DatabaseService {
         .filter()
         .anyOf(sessionIds, (q, id) => q.sessionIdEqualTo(id))
         .findAll();
+  }
+
+  //------------------ PUAN SİSTEMİ İŞLEMLERİ ------------------
+
+  Future<void> saveUserPoints(UserPoints points) async {
+    await isar.writeTxn(() async {
+      await isar.userPoints.put(points);
+    });
+  }
+
+  /// Kullanıcının puan bilgilerini getir
+  /// NEDEN: Dashboard'da göstermek için
+  Future<UserPoints?> getUserPoints(int userId) async {
+    return await isar.userPoints.filter().userIdEqualTo(userId).findFirst();
+  }
+
+  /// Puan geçmişi kaydet
+  /// NEDEN: Her antrenman için kazanılan puanları kaydetmek
+  Future<void> savePointsHistory(PointsHistory history) async {
+    await isar.writeTxn(() async {
+      await isar.pointsHistorys.put(history);
+    });
+  }
+
+  /// Kullanıcının puan geçmişini getir (tarih aralığı ile)
+  /// NEDEN: Grafik çizmek için belirli tarih aralığındaki puanları çekmek
+  Future<List<PointsHistory>> getPointsHistory(
+    int userId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    var query = isar.pointsHistorys.filter().userIdEqualTo(userId);
+
+    if (startDate != null) {
+      query = query.earnedAtGreaterThan(startDate);
+    }
+
+    if (endDate != null) {
+      query = query.earnedAtLessThan(endDate);
+    }
+
+    return await query.sortByEarnedAtDesc().findAll();
+  }
+
+  /// Belirli bir egzersiz için önceki logu getir (ağırlık karşılaştırması için)
+  /// NEDEN: Ağırlık artışı bonusu hesaplamak için önceki antrenmanı bilmemiz gerekiyor
+  ///
+  /// NASIL ÇALIŞIR:
+  /// 1. Kullanıcının tüm session'larını getir
+  /// 2. Bu session'lardaki tüm logları getir
+  /// 3. Aynı egzersiz adına sahip logları filtrele
+  /// 4. En son yapılan logu döndür
+  Future<ExerciseLog?> getPreviousExerciseLog(
+    int userId,
+    String exerciseName,
+  ) async {
+    // 1. Kullanıcının tüm session'larını getir
+    final sessions = await getWorkoutSessions(userId);
+    if (sessions.isEmpty) return null;
+
+    // 2. Session ID'lerini topla
+    final sessionIds = sessions.map((s) => s.id).toList();
+
+    // 3. Bu session'lardaki tüm logları getir
+    final allLogs = await getExerciseLogsForSessions(sessionIds);
+
+    // 4. Aynı egzersiz adına sahip logları filtrele ve tarihe göre sırala
+    final exerciseLogs =
+        allLogs.where((log) => log.exerciseName == exerciseName).toList()..sort((
+          a,
+          b,
+        ) {
+          // completedAt varsa ona göre, yoksa session'ın startTime'ına göre sırala
+          final aTime = a.completedAt ?? DateTime.now();
+          final bTime = b.completedAt ?? DateTime.now();
+          return bTime.compareTo(aTime); // En yeni önce
+        });
+
+    // 5. En son logu döndür (varsa)
+    return exerciseLogs.isNotEmpty ? exerciseLogs.first : null;
   }
 }

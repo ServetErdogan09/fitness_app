@@ -345,10 +345,23 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
   }
 
   Widget _buildProgramCard(WorkoutPlan plan) {
-    // burada ilerleme yüzdesini hesapla kullanıcı tamamladığı antrenmanlara göre her yaptığı antreman günü için yüzdelik bir ilerleme verilebilir
-    final progress = plan.days.isNotEmpty
-        ? 0.3
-        : 0.0; // örnek olarak %30 ilerleme
+    // Calculate progress based on completed sessions this week
+    final history = ref.watch(workoutProvider).history;
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final startOfWeek = DateTime(monday.year, monday.month, monday.day);
+    final endOfWeek = startOfWeek.add(const Duration(days: 7));
+
+    final completedSessionsThisWeek = history.where((session) {
+      return session.workoutPlanId == plan.id &&
+          session.startTime.isAfter(startOfWeek) &&
+          session.startTime.isBefore(endOfWeek);
+    }).length;
+
+    final scheduledSessionsCount = plan.days.length;
+    final progress = scheduledSessionsCount > 0
+        ? (completedSessionsThisWeek / scheduledSessionsCount).clamp(0.0, 1.0)
+        : 0.0;
 
     return GestureDetector(
       onTap: () {

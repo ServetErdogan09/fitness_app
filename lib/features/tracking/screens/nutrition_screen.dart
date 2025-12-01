@@ -87,9 +87,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
               ),
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Hızlı yiyecek ekleme
-        },
+        onPressed: () => _showQuickAddMenu(context),
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: Color(0xFF102216)),
       ),
@@ -615,12 +613,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
           if (isToday) ...{
             IconButton(
               onPressed: () {
-                _showEditFoodBottomSheet(
-                  BuildContext,
-                  meal.ogunTuru,
-                  food,
-                  meal.id,
-                );
+                _showEditFoodBottomSheet(context, meal.ogunTuru, food, meal.id);
               },
               icon: const Icon(Icons.edit, color: Colors.cyanAccent),
             ),
@@ -819,7 +812,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
   }
 
   void _showEditFoodBottomSheet(
-    BuildContext,
+    BuildContext context,
     String maleType,
     FoodEntry foodEntry,
     int mealId,
@@ -1144,6 +1137,69 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showQuickAddMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF102216),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Hızlı Ekle',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildQuickAddOption(context, 'Kahvaltı', Icons.wb_sunny_outlined),
+            _buildQuickAddOption(context, 'Öğle Yemeği', Icons.wb_sunny),
+            _buildQuickAddOption(
+              context,
+              'Akşam Yemeği',
+              Icons.nights_stay_outlined,
+            ),
+            _buildQuickAddOption(context, 'Ara Öğünler', Icons.restaurant_menu),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickAddOption(
+    BuildContext sheetContext,
+    String mealType,
+    IconData icon,
+  ) {
+    return ListTile(
+      leading: Icon(icon, color: AppColors.primary),
+      title: Text(
+        mealType,
+        style: const TextStyle(color: Colors.white, fontSize: 16),
+      ),
+      onTap: () async {
+        Navigator.pop(sheetContext); // Close menu
+        await Future.delayed(const Duration(milliseconds: 200));
+        if (context.mounted) {
+          _showAddFoodBottomSheet(
+            context,
+            mealType,
+          ); // Open add food sheet using State context
+        }
+      },
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      hoverColor: Colors.white.withOpacity(0.1),
     );
   }
 }

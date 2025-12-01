@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:fitness_app/features/tracking/provider/workout_sessions_notifier.dart';
 import 'package:fitness_app/features/tracking/widgets/add_exercise_bottom_sheet.dart';
+import 'package:fitness_app/features/tracking/widgets/points_breakdown_dialog.dart';
 import 'package:fitness_app/models/workout_session.dart';
 import 'package:fitness_app/router/app_router.dart';
 import 'package:flutter/material.dart';
@@ -172,6 +173,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
 
   void _toggleSetCompletion(
     String exerciseName,
+    int exerciseId,
     int setNumber,
     double weight,
     int reps,
@@ -199,6 +201,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       // Completing: Save to database
       final log = ExerciseLog()
         ..exerciseName = exerciseName
+        ..exerciseId = exerciseId
         ..setNumber = setNumber
         ..weight = weight
         ..reps = reps
@@ -238,7 +241,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   void _finishWorkout() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1C1C1E),
         title: const Text(
           'Antrenmanı Bitir',
@@ -250,7 +253,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text(
               'İptal',
               style: TextStyle(color: Color(0xFF9CA3AF), fontFamily: 'Lexend'),
@@ -258,7 +261,41 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              await ref.read(workoutProvider.notifier).finishWorkout();
+              // Check if there are any exercise logs
+              if (ref.read(workoutProvider).currentLogs.isEmpty) {
+                Navigator.pop(dialogContext); // Close dialog first
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Antrenmanı bitirmek için en az bir egzersiz ve set eklemelisiniz!',
+                      style: TextStyle(fontFamily: 'Lexend'),
+                    ),
+                    backgroundColor: Colors.red,
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+                return;
+              }
+
+              Navigator.pop(dialogContext); // Close confirmation dialog
+
+              // Finish workout and get points
+              final calculation = await ref
+                  .read(workoutProvider.notifier)
+                  .finishWorkout();
+
+              if (!mounted) return;
+
+              if (calculation != null) {
+                // Show points breakdown
+                await showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) =>
+                      PointsBreakdownDialog(calculation: calculation),
+                );
+              }
+
               if (!mounted) return;
               context.go(AppRoutes.training);
             },
@@ -682,7 +719,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Column(
               children: sets
-                  .map((set) => _buildSetRow(exercise.exerciseName, set))
+                  .map(
+                    (set) =>
+                        _buildSetRow(exercise.exerciseName, exercise.id, set),
+                  )
                   .toList(),
             ),
           ),
@@ -716,7 +756,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     );
   }
 
-  Widget _buildSetRow(String exerciseName, SetData set) {
+  Widget _buildSetRow(String exerciseName, int exerciseId, SetData set) {
     // Get persistent controllers from state
     final weightController = _weightControllers[exerciseName]?[set.setNumber];
     final repsController = _repsControllers[exerciseName]?[set.setNumber];
@@ -844,6 +884,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                 ? null
                 : () => _toggleSetCompletion(
                     exerciseName,
+                    exerciseId,
                     set.setNumber,
                     set.weight,
                     set.reps,

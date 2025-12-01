@@ -22,38 +22,43 @@ const ExerciseLogSchema = CollectionSchema(
       name: r'completedAt',
       type: IsarType.dateTime,
     ),
-    r'exerciseName': PropertySchema(
+    r'exerciseId': PropertySchema(
       id: 1,
+      name: r'exerciseId',
+      type: IsarType.long,
+    ),
+    r'exerciseName': PropertySchema(
+      id: 2,
       name: r'exerciseName',
       type: IsarType.string,
     ),
     r'notes': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'notes',
       type: IsarType.string,
     ),
     r'orderIndex': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'orderIndex',
       type: IsarType.long,
     ),
     r'reps': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'reps',
       type: IsarType.long,
     ),
     r'sessionId': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'sessionId',
       type: IsarType.long,
     ),
     r'setNumber': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'setNumber',
       type: IsarType.long,
     ),
     r'weight': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'weight',
       type: IsarType.double,
     )
@@ -95,13 +100,14 @@ void _exerciseLogSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDateTime(offsets[0], object.completedAt);
-  writer.writeString(offsets[1], object.exerciseName);
-  writer.writeString(offsets[2], object.notes);
-  writer.writeLong(offsets[3], object.orderIndex);
-  writer.writeLong(offsets[4], object.reps);
-  writer.writeLong(offsets[5], object.sessionId);
-  writer.writeLong(offsets[6], object.setNumber);
-  writer.writeDouble(offsets[7], object.weight);
+  writer.writeLong(offsets[1], object.exerciseId);
+  writer.writeString(offsets[2], object.exerciseName);
+  writer.writeString(offsets[3], object.notes);
+  writer.writeLong(offsets[4], object.orderIndex);
+  writer.writeLong(offsets[5], object.reps);
+  writer.writeLong(offsets[6], object.sessionId);
+  writer.writeLong(offsets[7], object.setNumber);
+  writer.writeDouble(offsets[8], object.weight);
 }
 
 ExerciseLog _exerciseLogDeserialize(
@@ -112,14 +118,15 @@ ExerciseLog _exerciseLogDeserialize(
 ) {
   final object = ExerciseLog();
   object.completedAt = reader.readDateTimeOrNull(offsets[0]);
-  object.exerciseName = reader.readString(offsets[1]);
+  object.exerciseId = reader.readLong(offsets[1]);
+  object.exerciseName = reader.readString(offsets[2]);
   object.id = id;
-  object.notes = reader.readStringOrNull(offsets[2]);
-  object.orderIndex = reader.readLongOrNull(offsets[3]);
-  object.reps = reader.readLong(offsets[4]);
-  object.sessionId = reader.readLong(offsets[5]);
-  object.setNumber = reader.readLong(offsets[6]);
-  object.weight = reader.readDouble(offsets[7]);
+  object.notes = reader.readStringOrNull(offsets[3]);
+  object.orderIndex = reader.readLongOrNull(offsets[4]);
+  object.reps = reader.readLong(offsets[5]);
+  object.sessionId = reader.readLong(offsets[6]);
+  object.setNumber = reader.readLong(offsets[7]);
+  object.weight = reader.readDouble(offsets[8]);
   return object;
 }
 
@@ -133,18 +140,20 @@ P _exerciseLogDeserializeProp<P>(
     case 0:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
-    case 2:
-      return (reader.readStringOrNull(offset)) as P;
-    case 3:
-      return (reader.readLongOrNull(offset)) as P;
-    case 4:
       return (reader.readLong(offset)) as P;
+    case 2:
+      return (reader.readString(offset)) as P;
+    case 3:
+      return (reader.readStringOrNull(offset)) as P;
+    case 4:
+      return (reader.readLongOrNull(offset)) as P;
     case 5:
       return (reader.readLong(offset)) as P;
     case 6:
       return (reader.readLong(offset)) as P;
     case 7:
+      return (reader.readLong(offset)) as P;
+    case 8:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -310,6 +319,62 @@ extension ExerciseLogQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'completedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ExerciseLog, ExerciseLog, QAfterFilterCondition>
+      exerciseIdEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'exerciseId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ExerciseLog, ExerciseLog, QAfterFilterCondition>
+      exerciseIdGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'exerciseId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ExerciseLog, ExerciseLog, QAfterFilterCondition>
+      exerciseIdLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'exerciseId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ExerciseLog, ExerciseLog, QAfterFilterCondition>
+      exerciseIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'exerciseId',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -979,6 +1044,18 @@ extension ExerciseLogQuerySortBy
     });
   }
 
+  QueryBuilder<ExerciseLog, ExerciseLog, QAfterSortBy> sortByExerciseId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'exerciseId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ExerciseLog, ExerciseLog, QAfterSortBy> sortByExerciseIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'exerciseId', Sort.desc);
+    });
+  }
+
   QueryBuilder<ExerciseLog, ExerciseLog, QAfterSortBy> sortByExerciseName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'exerciseName', Sort.asc);
@@ -1076,6 +1153,18 @@ extension ExerciseLogQuerySortThenBy
   QueryBuilder<ExerciseLog, ExerciseLog, QAfterSortBy> thenByCompletedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'completedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ExerciseLog, ExerciseLog, QAfterSortBy> thenByExerciseId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'exerciseId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ExerciseLog, ExerciseLog, QAfterSortBy> thenByExerciseIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'exerciseId', Sort.desc);
     });
   }
 
@@ -1185,6 +1274,12 @@ extension ExerciseLogQueryWhereDistinct
     });
   }
 
+  QueryBuilder<ExerciseLog, ExerciseLog, QDistinct> distinctByExerciseId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'exerciseId');
+    });
+  }
+
   QueryBuilder<ExerciseLog, ExerciseLog, QDistinct> distinctByExerciseName(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1241,6 +1336,12 @@ extension ExerciseLogQueryProperty
   QueryBuilder<ExerciseLog, DateTime?, QQueryOperations> completedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'completedAt');
+    });
+  }
+
+  QueryBuilder<ExerciseLog, int, QQueryOperations> exerciseIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'exerciseId');
     });
   }
 

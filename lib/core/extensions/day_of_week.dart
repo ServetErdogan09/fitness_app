@@ -46,9 +46,11 @@ extension DayOfWeekExt on DayOfWeek {
         return "Pazar";
     }
   }
+}
 
-  DayOfWeek dayFromDate(DateTime date) {
-    switch (date.weekday) {
+extension DateTimeExt on DateTime {
+  DayOfWeek get toDayOfWeek {
+    switch (weekday) {
       case 1:
         return DayOfWeek.monday;
       case 2:

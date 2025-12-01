@@ -1,3 +1,5 @@
+import 'package:fitness_app/features/dashboard/screens/dashboard_screen.dart';
+import 'package:fitness_app/features/profile/screens/profile_screen.dart';
 import 'package:fitness_app/features/tracking/screens/active_workout_screen.dart';
 import 'package:fitness_app/features/tracking/screens/training_screen.dart';
 import 'package:fitness_app/features/tracking/screens/nutrition_screen.dart';
@@ -10,6 +12,8 @@ import 'package:go_router/go_router.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 class AppRoutes {
+  static const dashboard = '/';
+  static const profile = '/profile';
   static const measurements = '/measurements';
   static const nutrition = '/nutrition';
   static const training = '/training';
@@ -20,13 +24,18 @@ class AppRoutes {
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: AppRoutes.measurements,
+    initialLocation: AppRoutes.dashboard,
     routes: [
       ShellRoute(
         builder: (context, state, child) {
           return ScaffoldWithNavBar(child: child);
         },
         routes: [
+          GoRoute(
+            path: AppRoutes.dashboard,
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: DashboardScreen()),
+          ),
           GoRoute(
             path: AppRoutes.measurements,
             pageBuilder: (context, state) =>
@@ -41,6 +50,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.training,
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: TrainingScreen()),
+          ),
+          GoRoute(
+            path: AppRoutes.profile,
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ProfileScreen()),
           ),
         ],
       ),
@@ -67,22 +81,31 @@ class ScaffoldWithNavBar extends StatelessWidget {
 
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.path;
-    if (location == AppRoutes.measurements) return 0;
-    if (location == AppRoutes.nutrition) return 1;
-    if (location == AppRoutes.training) return 2;
+    if (location == AppRoutes.dashboard) return 0;
+    if (location == AppRoutes.measurements) return 1;
+    if (location == AppRoutes.nutrition) return 2;
+    if (location == AppRoutes.training) return 3;
+    if (location == AppRoutes.profile) return 4;
     return 0;
   }
 
   void _onItemTapped(BuildContext context, int index) {
     switch (index) {
       case 0:
-        context.go(AppRoutes.measurements);
+        context.go(AppRoutes.dashboard);
         break;
       case 1:
-        context.go(AppRoutes.nutrition);
+        context.go(AppRoutes.measurements);
         break;
       case 2:
+        context.go(AppRoutes.nutrition);
+        break;
+      case 3:
         context.go(AppRoutes.training);
+        break;
+
+      case 4:
+        context.go(AppRoutes.profile);
         break;
     }
   }
@@ -99,6 +122,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
         unselectedItemColor: Colors.white70,
         backgroundColor: const Color(0xFF102216),
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Ana Sayfa'),
           BottomNavigationBarItem(
             icon: Icon(Icons.monitor_weight),
             label: 'Ölçümler',
@@ -111,6 +135,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
             icon: Icon(Icons.fitness_center),
             label: 'Antrenman',
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
         ],
       ),
     );

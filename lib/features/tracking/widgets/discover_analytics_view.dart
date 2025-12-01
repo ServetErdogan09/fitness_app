@@ -5,6 +5,41 @@ import 'package:fitness_app/features/tracking/provider/workout_sessions_notifier
 import 'package:fitness_app/models/workout_session.dart';
 import 'package:intl/intl.dart';
 
+// Performance tracking class
+class ExercisePerformance {
+  final String exerciseName;
+  final int plannedSets;
+  final int completedSets;
+  final double plannedReps;
+  final double completedReps;
+
+  ExercisePerformance({
+    required this.exerciseName,
+    required this.plannedSets,
+    required this.completedSets,
+    required this.plannedReps,
+    required this.completedReps,
+  });
+
+  double get setCompletionRate =>
+      plannedSets > 0 ? (completedSets / plannedSets) : 0.0;
+  double get repCompletionRate =>
+      plannedReps > 0 ? (completedReps / plannedReps) : 0.0;
+  double get overallScore => (setCompletionRate + repCompletionRate) / 2;
+
+  Color get performanceColor {
+    if (overallScore >= 0.9) return const Color(0xFF13ec49); // Green
+    if (overallScore >= 0.7) return const Color(0xFFf59e0b); // Orange
+    return const Color(0xFFef4444); // Red
+  }
+
+  String get performanceLabel {
+    if (overallScore >= 0.9) return 'Mükemmel';
+    if (overallScore >= 0.7) return 'İyi';
+    return 'Geliştirilmeli';
+  }
+}
+
 class DiscoverAnalyticsView extends ConsumerStatefulWidget {
   const DiscoverAnalyticsView({super.key});
 
@@ -16,6 +51,8 @@ class DiscoverAnalyticsView extends ConsumerStatefulWidget {
 class _DiscoverAnalyticsViewState extends ConsumerState<DiscoverAnalyticsView> {
   WorkoutPlan? _selectedPlan;
   List<ExerciseLog> _planLogs = [];
+  List<PlanExercise> _planExercises = [];
+  Map<String, ExercisePerformance> _performanceMap = {};
   bool _isLoading = false;
   String _volumeTimeRange = '1M';
   String? _selectedExerciseForProgress;
@@ -49,8 +86,47 @@ class _DiscoverAnalyticsViewState extends ConsumerState<DiscoverAnalyticsView> {
         .read(workoutProvider.notifier)
         .getLogsForPlan(_selectedPlan!.id);
 
+    // Fetch plan exercises
+    final exercises = await ref
+        .read(workoutProvider.notifier)
+        .getPlanExercises(_selectedPlan!.id);
+
+    // Calculate performance for each exercise
+    final performanceMap = <String, ExercisePerformance>{};
+    for (final exercise in exercises) {
+      final exerciseLogs = logs
+          .where((l) => l.exerciseName == exercise.exerciseName)
+          .toList();
+
+      if (exerciseLogs.isNotEmpty) {
+        // Count unique sets (by setNumber)
+        final completedSets = exerciseLogs
+            .map((l) => l.setNumber)
+            .toSet()
+            .length;
+
+        // Calculate average reps
+        final totalReps = exerciseLogs.fold<int>(0, (sum, l) => sum + l.reps);
+        final avgReps = totalReps / exerciseLogs.length;
+
+        // Parse planned values
+        final plannedSets = int.tryParse(exercise.setCount) ?? 0;
+        final plannedReps = double.tryParse(exercise.repCount) ?? 0.0;
+
+        performanceMap[exercise.exerciseName] = ExercisePerformance(
+          exerciseName: exercise.exerciseName,
+          plannedSets: plannedSets,
+          completedSets: completedSets,
+          plannedReps: plannedReps,
+          completedReps: avgReps,
+        );
+      }
+    }
+
     setState(() {
       _planLogs = logs;
+      _planExercises = exercises;
+      _performanceMap = performanceMap;
       _isLoading = false;
       // Reset selected exercise if it's not in the new logs
       if (_selectedExerciseForProgress != null) {
@@ -92,6 +168,10 @@ class _DiscoverAnalyticsViewState extends ConsumerState<DiscoverAnalyticsView> {
               children: [
                 _buildSummaryCards(),
                 const SizedBox(height: 24),
+                if (_performanceMap.isNotEmpty) ...[
+                  _buildPerformanceSummary(),
+                  const SizedBox(height: 24),
+                ],
                 _buildSectionTitle('Haftalık Antrenman Sıklığı'),
                 const SizedBox(height: 16),
                 _buildWeeklyFrequencyChart(),
@@ -102,6 +182,10 @@ class _DiscoverAnalyticsViewState extends ConsumerState<DiscoverAnalyticsView> {
                 const SizedBox(height: 16),
                 _buildTopExercisesChart(),
                 const SizedBox(height: 24),
+                if (_performanceMap.isNotEmpty) ...[
+                  _buildExercisePerformanceSection(),
+                  const SizedBox(height: 24),
+                ],
                 _buildExerciseProgressSection(),
                 const SizedBox(height: 80),
               ],
@@ -909,6 +993,251 @@ class _DiscoverAnalyticsViewState extends ConsumerState<DiscoverAnalyticsView> {
             color: Colors.white.withOpacity(0.5),
             fontSize: 12,
             fontFamily: 'Lexend',
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPerformanceSummary() {
+    // Calculate overall performance
+    if (_performanceMap.isEmpty) return const SizedBox();
+
+    final performances = _performanceMap.values.toList();
+    final avgScore =
+        performances.fold<double>(0, (sum, p) => sum + p.overallScore) /
+        performances.length;
+
+    final scorePercentage = (avgScore * 100).round();
+    Color scoreColor;
+    String scoreLabel;
+
+    if (avgScore >= 0.9) {
+      scoreColor = const Color(0xFF13ec49);
+      scoreLabel = 'Mükemmel! 💪';
+    } else if (avgScore >= 0.7) {
+      scoreColor = const Color(0xFFf59e0b);
+      scoreLabel = 'İyi gidiyorsun! 👍';
+    } else {
+      scoreColor = const Color(0xFFef4444);
+      scoreLabel = 'Geliştirebilirsin! 💡';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [scoreColor.withOpacity(0.1), scoreColor.withOpacity(0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scoreColor.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: scoreColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.analytics_outlined,
+                  color: scoreColor,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Plan Uyum Skoru',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Lexend',
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      scoreLabel,
+                      style: TextStyle(
+                        color: scoreColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Lexend',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '$scorePercentage%',
+                style: TextStyle(
+                  color: scoreColor,
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Lexend',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: avgScore,
+              minHeight: 8,
+              backgroundColor: Colors.white.withOpacity(0.1),
+              valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExercisePerformanceSection() {
+    if (_performanceMap.isEmpty) return const SizedBox();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Egzersiz Performans Detayları'),
+        const SizedBox(height: 16),
+        ..._performanceMap.values.map((performance) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _buildExercisePerformanceCard(performance),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildExercisePerformanceCard(ExercisePerformance performance) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1C1E),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: performance.performanceColor.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  performance.exerciseName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Lexend',
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: performance.performanceColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  performance.performanceLabel,
+                  style: TextStyle(
+                    color: performance.performanceColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Lexend',
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildPerformanceMetric(
+            label: 'Set',
+            planned: performance.plannedSets,
+            completed: performance.completedSets,
+            rate: performance.setCompletionRate,
+          ),
+          const SizedBox(height: 12),
+          _buildPerformanceMetric(
+            label: 'Tekrar (Ort.)',
+            planned: performance.plannedReps.round(),
+            completed: performance.completedReps.round(),
+            rate: performance.repCompletionRate,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPerformanceMetric({
+    required String label,
+    required int planned,
+    required int completed,
+    required double rate,
+  }) {
+    final percentage = (rate * 100).round();
+    Color barColor;
+
+    if (rate >= 0.9) {
+      barColor = const Color(0xFF13ec49);
+    } else if (rate >= 0.7) {
+      barColor = const Color(0xFFf59e0b);
+    } else {
+      barColor = const Color(0xFFef4444);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 14,
+                fontFamily: 'Lexend',
+              ),
+            ),
+            Text(
+              '$completed/$planned ($percentage%)',
+              style: TextStyle(
+                color: barColor,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Lexend',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: rate.clamp(0.0, 1.0),
+            minHeight: 6,
+            backgroundColor: Colors.white.withOpacity(0.1),
+            valueColor: AlwaysStoppedAnimation<Color>(barColor),
           ),
         ),
       ],

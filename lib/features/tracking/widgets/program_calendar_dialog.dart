@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fitness_app/models/workout_session.dart';
+import 'package:fitness_app/core/extensions/day_of_week.dart';
+import 'package:fitness_app/features/tracking/widgets/shared_calendar_widget.dart';
 
 class ProgramCalendarDialog extends StatefulWidget {
   final WorkoutPlan plan;
@@ -92,13 +94,12 @@ class _ProgramCalendarDialogState extends State<ProgramCalendarDialog> {
             ),
             const SizedBox(height: 16),
 
-            // Days of Week
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz']
+              children: DayOfWeek.values
                   .map(
-                    (day) => Text(
-                      day,
+                    (d) => Text(
+                      d.shortTR,
                       style: const TextStyle(
                         color: Color(0xFF9CA3AF),
                         fontSize: 12,
@@ -110,136 +111,20 @@ class _ProgramCalendarDialogState extends State<ProgramCalendarDialog> {
             ),
             const SizedBox(height: 8),
 
-            // Calendar Grid
-            _buildCalendarGrid(),
+            SharedCalendarGrid(
+              plan: widget.plan,
+              completedDates: widget.completedDates,
+              focusedDay: _focusedDay,
+              isCompact: true,
+              startDate: widget.plan.creationDate,
+            ),
 
             const SizedBox(height: 16),
 
-            // Legend
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF13ec49),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Tamamlandı',
-                  style: TextStyle(
-                    color: Color(0xFF9CA3AF),
-                    fontSize: 12,
-                    fontFamily: 'Lexend',
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Yapılacak Gün (Eksik)',
-                  style: TextStyle(
-                    color: Color(0xFF9CA3AF),
-                    fontSize: 12,
-                    fontFamily: 'Lexend',
-                  ),
-                ),
-              ],
-            ),
+            const CalendarLegend(isCompact: true),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildCalendarGrid() {
-    final daysInMonth = DateUtils.getDaysInMonth(
-      _focusedDay.year,
-      _focusedDay.month,
-    );
-    final firstDayOfMonth = DateTime(_focusedDay.year, _focusedDay.month, 1);
-    final weekdayOffset = firstDayOfMonth.weekday - 1; // Monday = 1
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: daysInMonth + weekdayOffset,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 7,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-      ),
-      itemBuilder: (context, index) {
-        if (index < weekdayOffset) return const SizedBox.shrink();
-
-        final day = index - weekdayOffset + 1;
-        final date = DateTime(_focusedDay.year, _focusedDay.month, day);
-        final weekdayName = DateFormat('EEEE', 'tr_TR').format(date);
-        final isPlannedDay = widget.plan.days.any(
-          (d) => d.name.toLowerCase() == weekdayName.toLowerCase(),
-        );
-        final isCompleted = _isCompleted(date);
-        final isToday = DateUtils.isSameDay(date, DateTime.now());
-
-        print(
-          isPlannedDay
-              ? 'Planned Day: $date ($weekdayName)'
-              : 'Not a Planned Day: $date ($weekdayName)',
-        );
-
-        Color bgColor;
-        if (isCompleted) {
-          bgColor = const Color(0xFF13ec49).withOpacity(0.2);
-        } else if (isPlannedDay) {
-          bgColor = Colors.red.withOpacity(0.2);
-        } else {
-          bgColor = const Color.fromARGB(255, 91, 87, 87).withOpacity(0.1);
-        }
-
-        return Container(
-          decoration: BoxDecoration(
-            color: bgColor,
-            shape: BoxShape.circle,
-            border: isToday
-                ? Border.all(color: const Color(0xFF13ec49), width: 1)
-                : null,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            '$day',
-            style: TextStyle(
-              color: isCompleted
-                  ? const Color(0xFF13ec49)
-                  : isPlannedDay
-                  ? Colors.red
-                  : Colors.white.withOpacity(0.5),
-              fontWeight: isCompleted || isToday
-                  ? FontWeight.bold
-                  : FontWeight.normal,
-              fontFamily: 'Lexend',
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  bool _isCompleted(DateTime date) {
-    return widget.completedDates.any(
-      (completedDate) =>
-          completedDate.year == date.year &&
-          completedDate.month == date.month &&
-          completedDate.day == date.day,
     );
   }
 }
