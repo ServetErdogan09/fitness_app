@@ -107,6 +107,7 @@ class WorkoutSessionsNotifier extends StateNotifier<WorkoutState> {
   Future<void> _loadHistory() async {
     state = state.copyWith(isLoading: true);
     final history = await db.getWorkoutSessions(_userId);
+    print('Loaded ${history.length} workout sessions from history.');
     state = state.copyWith(history: history, isLoading: false);
   }
 
@@ -175,6 +176,7 @@ class WorkoutSessionsNotifier extends StateNotifier<WorkoutState> {
     // Delete all exercise logs for this session
     final logs = await db.getExerciseLogs(sessionId);
     for (var log in logs) {
+      print('Deleting log id: ${log.id}');
       await db.deleteExerciseLog(log.id);
     }
 
@@ -242,10 +244,8 @@ class WorkoutSessionsNotifier extends StateNotifier<WorkoutState> {
   Future<void> loadActivePlans() async {
     state = state.copyWith(isLoading: true);
     final allPlans = await db.getWorkoutPlans(_userId);
-    final activePlans = allPlans
-        .where((plan) => plan.isActive == true)
-        .toList();
-    state = state.copyWith(activePlans: activePlans, isLoading: false);
+    // Tüm programları göster (aktif + pasif)
+    state = state.copyWith(activePlans: allPlans, isLoading: false);
   }
 
   Future<void> loadExerciseLogs(int sessionId) async {
@@ -303,19 +303,79 @@ class WorkoutSessionsNotifier extends StateNotifier<WorkoutState> {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  Future<void> restoreSession(WorkoutSession session) async {
+  Future<void> restoreSession(
+    WorkoutSession session, {
+    bool skipTimer = false,
+  }) async {
     state = state.copyWith(
       currentSession: session,
-      isTracking: true,
+      isTracking: !skipTimer, // Read-only modda isTracking = false
       elapsedDuration: Duration.zero,
       isPaused: false,
     );
 
-    // Load logs for this session
     final logs = await db.getExerciseLogs(session.id);
     state = state.copyWith(currentLogs: logs);
+    print('skipTimer: $skipTimer');
+    if (!skipTimer) {
+      _startTimer();
+    }
+  }
 
-    _startTimer();
+  Future<WorkoutSession?> getCompletedSessionForToday(
+    int planId,
+    DateTime date,
+  ) async {
+    final sessions = await db.getWorkoutSessions(_userId);
+
+    try {
+      return sessions.firstWhere(
+        (session) =>
+            session.workoutPlanId == planId &&
+            session.endTime != null &&
+            _isSameDay(session.startTime, date),
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Program Yönetimi Metodları
+  Future<void> togglePlanActive(int planId, bool isActive) async {
+    final plan = await db.getWorkoutPlan(planId);
+    if (plan != null) {
+      plan.isActive = isActive;
+      await db.updateWorkoutPlan(plan);
+      await loadActivePlans();
+    }
+  }
+
+  Future<void> deletePlan(int planId) async {
+    await db.deleteWorkoutPlan(planId);
+    await loadActivePlans();
+  }
+
+  Future<void> updatePlanDays(int planId, List<String> dayNames) async {
+    final plan = await db.getWorkoutPlan(planId);
+    if (plan != null) {
+      plan.days = dayNames.map((name) => WorkoutDay()..name = name).toList();
+      await db.updateWorkoutPlan(plan);
+      await loadActivePlans();
+    }
+  }
+
+  Future<List<ExerciseLog>> getLogsForPlan(int planId) async {
+    // 1. tüm sessionları getir
+    final sessions = await db.getWorkoutSessions(_userId);
+    final planSessions = sessions
+        .where((s) => s.workoutPlanId == planId)
+        .toList();
+
+    if (planSessions.isEmpty) return [];
+
+    // 2. tüm bu sessionlar için logları getir
+    final sessionIds = planSessions.map((s) => s.id).toList();
+    return await db.getExerciseLogsForSessions(sessionIds);
   }
 }
 

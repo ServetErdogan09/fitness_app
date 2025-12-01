@@ -212,6 +212,16 @@ class DatabaseService {
     return await isar.workoutPlans.filter().userIdEqualTo(userId).findAll();
   }
 
+  Future<WorkoutPlan?> getWorkoutPlan(int planId) async {
+    return await isar.workoutPlans.get(planId);
+  }
+
+  Future<void> updateWorkoutPlan(WorkoutPlan plan) async {
+    await isar.writeTxn(() async {
+      await isar.workoutPlans.put(plan);
+    });
+  }
+
   Future<void> deleteWorkoutPlan(int id) async {
     await isar.writeTxn(() async {
       // eğer plan siliniyorsa ona ait egzersizlerde silinsin
@@ -286,6 +296,15 @@ class DatabaseService {
     return await isar.exerciseLogs
         .filter()
         .sessionIdEqualTo(sessionId)
+        .findAll();
+  }
+
+  Future<List<ExerciseLog>> getExerciseLogsForSessions(
+    List<int> sessionIds,
+  ) async {
+    return await isar.exerciseLogs
+        .filter()
+        .anyOf(sessionIds, (q, id) => q.sessionIdEqualTo(id))
         .findAll();
   }
 }

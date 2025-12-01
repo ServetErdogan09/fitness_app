@@ -23,26 +23,50 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   final Map<String, Map<int, bool>> _completedSets = {};
   final Map<String, Map<int, TextEditingController>> _weightControllers = {};
   final Map<String, Map<int, TextEditingController>> _repsControllers = {};
+  bool _isReadOnly = false;
 
   @override
   void initState() {
     super.initState();
     Future.microtask(() async {
-      // Check if there's an incomplete session for today
       final today = DateTime.now();
+
+      // eğer bugün tamamlanmış bir seans varsa read-only moda geç
+      final completedSession = await ref
+          .read(workoutProvider.notifier)
+          .getCompletedSessionForToday(widget.plan.id, today);
+
+      print('completedSession null mu: $completedSession');
+      if (completedSession != null) {
+        // READ-ONLY MODE
+        await ref
+            .read(workoutProvider.notifier)
+            .restoreSession(
+              completedSession,
+              skipTimer: true, // eğer aynı gün ise zamanlayıcıyı başlatma
+            );
+        await _loadExercises();
+        await _loadCompletedSets(completedSession.id);
+        setState(() {
+          _isReadOnly = true;
+        });
+        return;
+      }
+
+      // kontrol et eğer bugün başlamış ama tamamlanmamış bir seans varsa
       final incompleteSession = await ref
           .read(workoutProvider.notifier)
           .getIncompleteSessionForToday(widget.plan.id, today);
 
       if (incompleteSession != null) {
-        // Restore incomplete session
+        // Başlamış ama tamamlanmamış seansı geri yükle
         await ref
             .read(workoutProvider.notifier)
             .restoreSession(incompleteSession);
         await _loadExercises();
         await _loadCompletedSets(incompleteSession.id);
       } else {
-        // Start new session
+        // Yeni bir seans başlat
         await ref.read(workoutProvider.notifier).startWorkout(widget.plan);
         await _loadExercises();
       }
@@ -57,7 +81,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
 
     setState(() {
       for (var exercise in exercises) {
-        // Skip if already loaded (preserve existing data)
+        // Eğer zaten yüklendiyse atla )
         if (_exerciseSets.containsKey(exercise.exerciseName)) {
           continue;
         }
@@ -328,20 +352,46 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                       color: Color(0xFF9CA3AF),
                     ),
                     onPressed: () {
-                      context.pop();
+                      context.go(AppRoutes.training);
                     },
                   ),
                   Expanded(
                     child: Column(
                       children: [
-                        Text(
-                          widget.plan.planName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Lexend',
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              widget.plan.planName,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Lexend',
+                              ),
+                            ),
+                            if (_isReadOnly)
+                              Container(
+                                margin: const EdgeInsets.only(left: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF13ec49),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Text(
+                                  'TAMAMLANDI',
+                                  style: TextStyle(
+                                    color: Color(0xFF102215),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Lexend',
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -380,39 +430,40 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                   const SizedBox(height: 16),
 
                   // Add Exercise Button
-                  GestureDetector(
-                    onTap: _showAddExerciseBottomSheet,
-                    child: Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
-                          width: 2,
-                          style: BorderStyle.solid,
+                  if (!_isReadOnly)
+                    GestureDetector(
+                      onTap: _showAddExerciseBottomSheet,
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
+                            width: 2,
+                            style: BorderStyle.solid,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.add_circle_outline,
-                            color: Color(0xFF9CA3AF),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Egzersiz Ekle',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.6),
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'Lexend',
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.add_circle_outline,
+                              color: Color(0xFF9CA3AF),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              'Egzersiz Ekle',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.6),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Lexend',
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                   const SizedBox(height: 100), // Space for bottom bar
                 ],
               ),
@@ -420,66 +471,68 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              const Color(0xFF102215).withOpacity(0),
-              const Color(0xFF102215),
-            ],
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _cancelWorkout,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white.withOpacity(0.1),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'İptal Et',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Lexend',
-                  ),
+      bottomNavigationBar: _isReadOnly
+          ? null
+          : Container(
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF102215).withOpacity(0),
+                    const Color(0xFF102215),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _finishWorkout,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF13ec49),
-                  foregroundColor: const Color(0xFF102215),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _cancelWorkout,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.1),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'İptal Et',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Lexend',
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'Antrenmanı Bitir',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Lexend',
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _finishWorkout,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF13ec49),
+                        foregroundColor: const Color(0xFF102215),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Antrenmanı Bitir',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Lexend',
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -533,32 +586,35 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: Icon(
-                    Icons.notes,
-                    color: Colors.white.withOpacity(0.7),
-                    size: 20,
+                if (!_isReadOnly) ...[
+                  IconButton(
+                    icon: Icon(
+                      Icons.notes,
+                      color: Colors.white.withOpacity(0.7),
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      // tıklanınca not ekleme ekranı açılacak
+                    },
                   ),
-                  onPressed: () {
-                    // tıklanınca not ekleme ekranı açılacak
-                  },
-                ),
-                IconButton(
-                  icon: Icon(
-                    Icons.delete,
-                    color: Colors.red.withOpacity(0.8),
-                    size: 20,
+
+                  IconButton(
+                    icon: Icon(
+                      Icons.delete,
+                      color: Colors.red.withOpacity(0.8),
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      ref
+                          .read(workoutProvider.notifier)
+                          .deletePlanExercise(exercise.id);
+                      setState(() {
+                        _exerciseSets.remove(exercise.exerciseName);
+                        _completedSets.remove(exercise.exerciseName);
+                      });
+                    },
                   ),
-                  onPressed: () {
-                    ref
-                        .read(workoutProvider.notifier)
-                        .deletePlanExercise(exercise.id);
-                    setState(() {
-                      _exerciseSets.remove(exercise.exerciseName);
-                      _completedSets.remove(exercise.exerciseName);
-                    });
-                  },
-                ),
+                ],
               ],
             ),
           ),
@@ -632,16 +688,15 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
           ),
 
           // Add Set Button
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: SizedBox(
-              width: double.infinity,
-              height: 40,
+          if (!_isReadOnly)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: ElevatedButton(
                 onPressed: () => _addSet(exercise.exerciseName),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF13ec49).withOpacity(0.2),
-                  foregroundColor: const Color(0xFF13ec49),
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 40),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -656,7 +711,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -709,6 +763,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
             width: 60,
             child: TextField(
               controller: weightController,
+              enabled: !_isReadOnly,
               keyboardType: TextInputType.number,
               style: const TextStyle(
                 color: Colors.white,
@@ -748,6 +803,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
             width: 60,
             child: TextField(
               controller: repsController,
+              enabled: !_isReadOnly,
               keyboardType: TextInputType.number,
               style: const TextStyle(
                 color: Colors.white,
@@ -784,12 +840,14 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
 
           // Complete Button
           GestureDetector(
-            onTap: () => _toggleSetCompletion(
-              exerciseName,
-              set.setNumber,
-              set.weight,
-              set.reps,
-            ),
+            onTap: _isReadOnly
+                ? null
+                : () => _toggleSetCompletion(
+                    exerciseName,
+                    set.setNumber,
+                    set.weight,
+                    set.reps,
+                  ),
             child: Container(
               width: 32,
               height: 32,
