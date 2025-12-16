@@ -106,21 +106,6 @@ flutter run
   <img src="assets/screenshots/nutrition.png" width="45%" />
   <img src="assets/screenshots/profile.png" width="45%" />
 </p>
---------------------------------
 
-🗺️ Roadmap
 
-Besin veritabanı
 
-Video egzersiz rehberleri
-
-Cloud senkronizasyon
-
-Dark mode
-
---------------------------------
-
-👤 Geliştirici
-
-Servet Erdoğan
-GitHub: @ServetErdogan09
