@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:fitness_app/models/user_points.dart';
-import 'dart:convert';
 
 void showPointsBreakdownDialog(
   BuildContext context,
@@ -110,13 +109,13 @@ class PointsBreakdownDialog extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   const Text(
                     'Toplam Kazanılan',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 16,
+                      fontSize: 10,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Lexend',
                     ),
@@ -125,7 +124,7 @@ class PointsBreakdownDialog extends StatelessWidget {
                     '${calculation.totalPoints > 0 ? "+" : ""}${calculation.totalPoints} puan',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 24,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Lexend',
                     ),
@@ -144,7 +143,7 @@ class PointsBreakdownDialog extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF13ec49),
                   foregroundColor: const Color(0xFF102215),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -173,7 +172,7 @@ class PointsBreakdownDialog extends StatelessWidget {
   }) {
     final isPositive = points >= 0;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
@@ -189,7 +188,7 @@ class PointsBreakdownDialog extends StatelessWidget {
             ),
             child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               label,
@@ -200,13 +199,18 @@ class PointsBreakdownDialog extends StatelessWidget {
               ),
             ),
           ),
-          Text(
-            '${isPositive ? "+" : ""}$points',
-            style: TextStyle(
-              color: color,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Lexend',
+          const SizedBox(width: 4),
+          SizedBox(
+            width: 40,
+            child: Text(
+              '${isPositive ? "+" : ""}$points',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                color: color,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Lexend',
+              ),
             ),
           ),
         ],

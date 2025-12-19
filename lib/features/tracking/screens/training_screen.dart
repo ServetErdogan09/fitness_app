@@ -70,14 +70,6 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  const SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: Icon(
-                      Icons.arrow_back_ios_new,
-                      color: Color(0xFF9CA3AF),
-                    ),
-                  ),
                   Expanded(
                     child: Text(
                       'Antrenman Programlarım',
@@ -88,11 +80,6 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                  ),
-                  const SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: Icon(Icons.settings, color: Color(0xFF9CA3AF)),
                   ),
                 ],
               ),

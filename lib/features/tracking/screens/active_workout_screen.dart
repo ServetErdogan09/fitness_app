@@ -445,6 +445,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                       ],
                     ),
                   ),
+                  /*
                   Text(
                     _formatDuration(workoutState.elapsedDuration),
                     style: const TextStyle(
@@ -454,6 +455,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                       fontFamily: 'Lexend',
                     ),
                   ),
+                  */
                 ],
               ),
             ),

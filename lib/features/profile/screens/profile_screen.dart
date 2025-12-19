@@ -287,8 +287,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               Icons.monitor_weight,
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(child: _buildMeasurementCard('Yaş', '29', Icons.cake)),
         ],
       ),
     );

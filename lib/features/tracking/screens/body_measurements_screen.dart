@@ -210,7 +210,7 @@ class _BodyMeasurementScreenState extends ConsumerState<BodyMeasurementScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 10),
+            const SizedBox(height: 30),
             // kartlarım
             SizedBox(
               height: 110,
