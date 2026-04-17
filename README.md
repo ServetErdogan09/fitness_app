@@ -15,7 +15,7 @@ Takvim görünümü
 
 Hacim & performans grafikleri
 
---------------------------------
+-------------------------------
 
 🥗 Beslenme
 
